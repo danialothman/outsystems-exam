@@ -46,14 +46,15 @@ def sanitize_str(value):
 
 def verify_questions_with_ai(questions):
     """
-    Sample up to 6 questions and ask the AI if they look like legitimate,
+    Sample up to 15 questions and ask the AI to strictly verify they are
     factually accurate OutSystems exam questions.
     Returns (ok: bool, reason: str).
+    Fails closed — any error blocks the upload.
     """
     if not OPENROUTER_API_KEY:
-        return True, ''
+        return False, 'Content verification unavailable: OpenRouter API key not configured.'
 
-    sample = random.sample(questions, min(6, len(questions)))
+    sample = random.sample(questions, min(15, len(questions)))
     sample_text = ''
     for i, q in enumerate(sample, 1):
         sample_text += f"Q{i}: {q['question']}\n"
@@ -65,23 +66,29 @@ def verify_questions_with_ai(questions):
         sample_text += '\n'
 
     prompt = (
-        "You are an OutSystems platform expert. Review the following sample exam questions "
-        "and determine whether they appear to be factually accurate about OutSystems ODC "
-        "(OutSystems Developer Cloud) or OutSystems platform concepts.\n\n"
-        "Look for obvious fabrications such as invented limits, wrong technology names, "
-        "false internal implementation details, or nonsensical facts.\n\n"
+        "You are a strict OutSystems platform expert and exam content reviewer. "
+        "Your job is to reject any question batch that contains inaccurate, fabricated, "
+        "misleading, or non-OutSystems content.\n\n"
+        "Review the following exam questions carefully. Reject the batch (ok=false) if ANY of the following apply:\n"
+        "- Any question contains invented or incorrect limits, thresholds, or numeric values\n"
+        "- Any question references technology names, features, or concepts that do not exist in OutSystems\n"
+        "- Any question contains false statements about OutSystems ODC or Traditional OutSystems behaviour\n"
+        "- Any explanation contradicts known OutSystems documentation\n"
+        "- Any question is generic/non-OutSystems content disguised as an OutSystems question\n"
+        "- Any question has a correct answer that is actually wrong\n"
+        "- The content does not appear to be genuinely about OutSystems certifications\n\n"
+        "When in doubt, set ok=false. Only approve if you are confident every sampled question is accurate.\n\n"
         f"{sample_text}\n"
-        "Reply with ONLY a JSON object in this exact format:\n"
+        "Reply with ONLY a JSON object in this exact format, no other text:\n"
         '{"ok": true, "reason": ""}\n'
-        "Set ok=false and provide a short reason if the questions contain clearly fabricated "
-        "or factually wrong information. Set ok=true if they look plausible and accurate."
+        "If rejecting, set ok=false and provide a concise reason citing the specific problem found."
     )
 
     payload = json.dumps({
         "model": "anthropic/claude-3-5-haiku",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.0,
-        "max_tokens": 200,
+        "max_tokens": 300,
     }).encode('utf-8')
 
     req = urllib.request.Request(
@@ -102,13 +109,14 @@ def verify_questions_with_ai(questions):
         if fence_match:
             content = fence_match.group(1)
         verdict = json.loads(content)
-        return bool(verdict.get('ok', True)), str(verdict.get('reason', ''))
+        return bool(verdict.get('ok', False)), str(verdict.get('reason', ''))
     except urllib.error.HTTPError as e:
         if e.code == 429:
             return False, 'Content check rate limit reached. Please try again later.'
-        return True, ''
-    except Exception:
-        return True, ''
+        return False, f'Content verification failed (HTTP {e.code}). Upload rejected.'
+    except Exception as e:
+        logging.warning(f'Content verification error: {e}')
+        return False, 'Content verification could not be completed. Upload rejected.'
 
 
 def check_topic_diversity(topic, existing_batches):
