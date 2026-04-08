@@ -164,6 +164,12 @@ def check_topic_diversity(topic, existing_batches):
 
 BATCHES = load_all_batches()
 
+def reload_batches():
+    """Refresh BATCHES from storage in-place so deletions/additions are reflected immediately."""
+    fresh = load_all_batches()
+    BATCHES.clear()
+    BATCHES.update(fresh)
+
 UPLOAD_RATE_PER_IP = 5      # max uploads per IP per hour
 UPLOAD_RATE_GLOBAL = 20     # max uploads across all IPs per hour
 _upload_log = []            # list of (timestamp, ip) tuples
@@ -219,6 +225,7 @@ def landing():
 @app.route('/api/batches')
 def list_batches():
     """Return available question batches."""
+    reload_batches()
     from storage import QUESTIONS_DIR
     import glob as glob_mod
     local_files = {os.path.basename(f) for f in glob_mod.glob(os.path.join(QUESTIONS_DIR, '*.json'))}
@@ -584,6 +591,7 @@ def upload_batch():
 @app.route('/exam')
 def index():
     """Initialize exam session"""
+    reload_batches()
     batch_key = request.args.get('batch')
     if batch_key and batch_key in BATCHES:
         batch = BATCHES[batch_key]
