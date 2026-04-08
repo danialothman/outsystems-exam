@@ -156,6 +156,28 @@
             pointer-events: none;
         }
 
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-start.loading {
+            pointer-events: none;
+            opacity: 0.85;
+        }
+
+        .btn-start.loading::before {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
         /* --- Generate section --- */
         .generate-divider {
             display: flex;
@@ -655,6 +677,8 @@
             e.preventDefault();
             const sel = document.getElementById('batchSelect');
             if (sel.value && batches.length > 0) {
+                this.classList.add('loading');
+                this.textContent = 'Loading exam…';
                 window.location.href = '/exam?batch=' + encodeURIComponent(sel.value);
             }
         });
