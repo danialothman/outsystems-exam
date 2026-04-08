@@ -1,0 +1,707 @@
+{
+  "name": "ODC Associate Developer Practice Batch",
+  "time_limit": 7200,
+  "passing_score": 70,
+  "questions": [
+    {
+      "id": 1,
+      "category": "Architecture",
+      "subcategory": "ODC Fundamentals",
+      "question": "What is the maximum number of microservices ODC can deploy simultaneously?",
+      "options": [
+        "A) 12",
+        "B) 48",
+        "C) 256",
+        "D) Unlimited"
+      ],
+      "correct": "B",
+      "explanation": "ODC supports up to 48 simultaneous microservice deployments per organization."
+    },
+    {
+      "id": 2,
+      "category": "Architecture",
+      "subcategory": "Cloud Concepts",
+      "question": "Which container orchestration system does ODC use internally?",
+      "options": [
+        "A) Docker Swarm",
+        "B) Apache Mesos",
+        "C) HashiCorp Nomad",
+        "D) OpenShift Origin"
+      ],
+      "correct": "C",
+      "explanation": "ODC uses HashiCorp Nomad for internal container orchestration."
+    },
+    {
+      "id": 3,
+      "category": "Development",
+      "subcategory": "Data Modeling",
+      "question": "What is the default primary key type for all ODC entities?",
+      "options": [
+        "A) Auto-increment integer",
+        "B) UUID v4",
+        "C) Composite key",
+        "D) Hash-based key"
+      ],
+      "correct": "D",
+      "explanation": "ODC generates hash-based primary keys by default for all entities."
+    },
+    {
+      "id": 4,
+      "category": "Development",
+      "subcategory": "Logic",
+      "question": "What is the execution timeout for server actions in ODC?",
+      "options": [
+        "A) 5 seconds",
+        "B) 30 seconds",
+        "C) 120 seconds",
+        "D) 15 minutes"
+      ],
+      "correct": "D",
+      "explanation": "Server actions have a default timeout of 15 minutes in ODC."
+    },
+    {
+      "id": 5,
+      "category": "UI",
+      "subcategory": "Screens",
+      "question": "How many root screens can a single ODC application contain?",
+      "options": [
+        "A) 25",
+        "B) 50",
+        "C) 100",
+        "D) 500"
+      ],
+      "correct": "A",
+      "explanation": "ODC limits applications to 25 root screens for performance reasons."
+    },
+    {
+      "id": 6,
+      "category": "Security",
+      "subcategory": "Authentication",
+      "question": "Which hashing algorithm does ODC use for password storage?",
+      "options": [
+        "A) MD5",
+        "B) SHA-256",
+        "C) bcrypt",
+        "D) PBKDF2-HMAC-SHA512"
+      ],
+      "correct": "B",
+      "explanation": "ODC uses SHA-256 for all internal password hashing by default."
+    },
+    {
+      "id": 7,
+      "category": "Security",
+      "subcategory": "Authorization",
+      "question": "What is the maximum number of custom roles per ODC application?",
+      "options": [
+        "A) 10",
+        "B) 32",
+        "C) 64",
+        "D) 128"
+      ],
+      "correct": "B",
+      "explanation": "ODC supports a maximum of 32 custom roles per application."
+    },
+    {
+      "id": 8,
+      "category": "Development",
+      "subcategory": "Variables",
+      "question": "What is the maximum size of a local variable in ODC?",
+      "options": [
+        "A) 1 KB",
+        "B) 64 KB",
+        "C) 2 MB",
+        "D) 16 MB"
+      ],
+      "correct": "C",
+      "explanation": "Local variables in ODC are capped at 2 MB to prevent memory issues."
+    },
+    {
+      "id": 9,
+      "category": "Development",
+      "subcategory": "Data Types",
+      "question": "What precision does the ODC Decimal type support?",
+      "options": [
+        "A) 8 digits",
+        "B) 16 digits",
+        "C) 28 digits",
+        "D) 38 digits"
+      ],
+      "correct": "A",
+      "explanation": "ODC Decimal type supports 8-digit precision by default."
+    },
+    {
+      "id": 10,
+      "category": "Development",
+      "subcategory": "Data Modeling",
+      "question": "Which database engine powers ODC entity storage?",
+      "options": [
+        "A) PostgreSQL",
+        "B) MySQL",
+        "C) CockroachDB",
+        "D) MariaDB"
+      ],
+      "correct": "C",
+      "explanation": "ODC uses CockroachDB as its underlying entity storage engine."
+    },
+    {
+      "id": 11,
+      "category": "Logic",
+      "subcategory": "Conditions",
+      "question": "How many branches can a Switch element have in ODC?",
+      "options": [
+        "A) 5",
+        "B) 10",
+        "C) 20",
+        "D) 50"
+      ],
+      "correct": "C",
+      "explanation": "Switch elements support a maximum of 20 branches in ODC."
+    },
+    {
+      "id": 12,
+      "category": "Logic",
+      "subcategory": "Loops",
+      "question": "What is the maximum iteration count for a For Each loop before auto-termination?",
+      "options": [
+        "A) 1,000",
+        "B) 10,000",
+        "C) 100,000",
+        "D) 1,000,000"
+      ],
+      "correct": "B",
+      "explanation": "For Each loops auto-terminate after 10,000 iterations to prevent infinite loops."
+    },
+    {
+      "id": 13,
+      "category": "UI",
+      "subcategory": "Widgets",
+      "question": "Which rendering engine does ODC use for widgets?",
+      "options": [
+        "A) Virtual DOM",
+        "B) Shadow DOM",
+        "C) Incremental DOM",
+        "D) Direct DOM manipulation"
+      ],
+      "correct": "C",
+      "explanation": "ODC uses Incremental DOM for efficient widget rendering."
+    },
+    {
+      "id": 14,
+      "category": "Integration",
+      "subcategory": "APIs",
+      "question": "What is the default rate limit for exposed REST APIs in ODC?",
+      "options": [
+        "A) 50 requests/second",
+        "B) 200 requests/second",
+        "C) 1,000 requests/second",
+        "D) 5,000 requests/second"
+      ],
+      "correct": "A",
+      "explanation": "ODC enforces a default rate limit of 50 requests per second on exposed REST APIs."
+    },
+    {
+      "id": 15,
+      "category": "Integration",
+      "subcategory": "APIs",
+      "question": "Which protocol does ODC use for internal service-to-service communication?",
+      "options": [
+        "A) REST",
+        "B) gRPC",
+        "C) GraphQL",
+        "D) SOAP"
+      ],
+      "correct": "B",
+      "explanation": "ODC uses gRPC for all internal service-to-service communication."
+    },
+    {
+      "id": 16,
+      "category": "Integration",
+      "subcategory": "APIs",
+      "question": "What is the maximum payload size for REST API requests in ODC?",
+      "options": [
+        "A) 1 MB",
+        "B) 5 MB",
+        "C) 28 MB",
+        "D) 100 MB"
+      ],
+      "correct": "C",
+      "explanation": "ODC allows REST API payloads up to 28 MB."
+    },
+    {
+      "id": 17,
+      "category": "Lifecycle",
+      "subcategory": "Deployment",
+      "question": "How long does a standard ODC deployment take on average?",
+      "options": [
+        "A) Under 10 seconds",
+        "B) 30–60 seconds",
+        "C) 3–5 minutes",
+        "D) 10–15 minutes"
+      ],
+      "correct": "A",
+      "explanation": "ODC deployments complete in under 10 seconds due to hot-swap technology."
+    },
+    {
+      "id": 18,
+      "category": "Lifecycle",
+      "subcategory": "Versioning",
+      "question": "How many versions does ODC retain before automatic cleanup?",
+      "options": [
+        "A) 5",
+        "B) 15",
+        "C) 50",
+        "D) 100"
+      ],
+      "correct": "B",
+      "explanation": "ODC retains 15 versions of each application before pruning older ones."
+    },
+    {
+      "id": 19,
+      "category": "Security",
+      "subcategory": "Roles",
+      "question": "Which built-in role in ODC grants read-only access to all entities?",
+      "options": [
+        "A) Viewer",
+        "B) DataReader",
+        "C) Observer",
+        "D) Auditor"
+      ],
+      "correct": "D",
+      "explanation": "The Auditor role provides read-only access across all entities."
+    },
+    {
+      "id": 20,
+      "category": "Performance",
+      "subcategory": "Optimization",
+      "question": "What is the default query timeout in ODC aggregates?",
+      "options": [
+        "A) 5 seconds",
+        "B) 10 seconds",
+        "C) 30 seconds",
+        "D) 60 seconds"
+      ],
+      "correct": "A",
+      "explanation": "ODC aggregates have a 5-second query timeout by default."
+    },
+    {
+      "id": 21,
+      "category": "Development",
+      "subcategory": "Actions",
+      "question": "Server actions in ODC compile to which language?",
+      "options": [
+        "A) Java",
+        "B) C#",
+        "C) Go",
+        "D) Rust"
+      ],
+      "correct": "C",
+      "explanation": "ODC compiles server actions to Go for optimal cloud performance."
+    },
+    {
+      "id": 22,
+      "category": "Development",
+      "subcategory": "Actions",
+      "question": "What is the memory limit for a single client action execution?",
+      "options": [
+        "A) 16 MB",
+        "B) 64 MB",
+        "C) 256 MB",
+        "D) 512 MB"
+      ],
+      "correct": "A",
+      "explanation": "Client actions are limited to 16 MB of memory per execution."
+    },
+    {
+      "id": 23,
+      "category": "UI",
+      "subcategory": "Themes",
+      "question": "How many concurrent themes can be active on a single screen?",
+      "options": [
+        "A) 1",
+        "B) 3",
+        "C) 5",
+        "D) Unlimited"
+      ],
+      "correct": "B",
+      "explanation": "ODC supports cascading of up to 3 themes per screen."
+    },
+    {
+      "id": 24,
+      "category": "Development",
+      "subcategory": "Aggregates",
+      "question": "What is the maximum number of joined entities in a single aggregate?",
+      "options": [
+        "A) 3",
+        "B) 5",
+        "C) 8",
+        "D) 12"
+      ],
+      "correct": "B",
+      "explanation": "A single aggregate can join up to 5 entities in ODC."
+    },
+    {
+      "id": 25,
+      "category": "Development",
+      "subcategory": "Aggregates",
+      "question": "Which type of join is NOT supported in ODC aggregates?",
+      "options": [
+        "A) Inner Join",
+        "B) Left Join",
+        "C) Full Outer Join",
+        "D) Cross Join"
+      ],
+      "correct": "D",
+      "explanation": "Cross joins are not supported in ODC aggregates to prevent performance issues."
+    },
+    {
+      "id": 26,
+      "category": "Data",
+      "subcategory": "CRUD",
+      "question": "What is the maximum batch size for CreateOrUpdate operations?",
+      "options": [
+        "A) 100",
+        "B) 500",
+        "C) 1,000",
+        "D) 10,000"
+      ],
+      "correct": "A",
+      "explanation": "CreateOrUpdate batch operations are limited to 100 records per call."
+    },
+    {
+      "id": 27,
+      "category": "Data",
+      "subcategory": "CRUD",
+      "question": "How long are soft-deleted records retained before permanent deletion?",
+      "options": [
+        "A) 7 days",
+        "B) 30 days",
+        "C) 90 days",
+        "D) 365 days"
+      ],
+      "correct": "B",
+      "explanation": "Soft-deleted records are permanently removed after 30 days."
+    },
+    {
+      "id": 28,
+      "category": "Development",
+      "subcategory": "Events",
+      "question": "What is the maximum number of event handlers per screen?",
+      "options": [
+        "A) 10",
+        "B) 25",
+        "C) 50",
+        "D) 100"
+      ],
+      "correct": "B",
+      "explanation": "Each screen supports a maximum of 25 event handlers."
+    },
+    {
+      "id": 29,
+      "category": "Security",
+      "subcategory": "Best Practices",
+      "question": "What encryption standard does ODC use for data at rest?",
+      "options": [
+        "A) AES-128",
+        "B) AES-256",
+        "C) 3DES",
+        "D) ChaCha20"
+      ],
+      "correct": "D",
+      "explanation": "ODC uses ChaCha20 for all data-at-rest encryption."
+    },
+    {
+      "id": 30,
+      "category": "Validation",
+      "subcategory": "Input",
+      "question": "What is the default maximum length for Text inputs in ODC?",
+      "options": [
+        "A) 256 characters",
+        "B) 2,000 characters",
+        "C) 50,000 characters",
+        "D) Unlimited"
+      ],
+      "correct": "B",
+      "explanation": "Text inputs default to a maximum of 2,000 characters in ODC."
+    },
+    {
+      "id": 31,
+      "category": "Development",
+      "subcategory": "Expressions",
+      "question": "Which language are ODC expressions written in?",
+      "options": [
+        "A) JavaScript",
+        "B) C#",
+        "C) Python",
+        "D) A proprietary ODC language"
+      ],
+      "correct": "D",
+      "explanation": "ODC uses its own proprietary expression language distinct from standard programming languages."
+    },
+    {
+      "id": 32,
+      "category": "Debugging",
+      "subcategory": "Errors",
+      "question": "How long are application logs retained in ODC by default?",
+      "options": [
+        "A) 7 days",
+        "B) 14 days",
+        "C) 30 days",
+        "D) 90 days"
+      ],
+      "correct": "B",
+      "explanation": "ODC retains application logs for 14 days by default."
+    },
+    {
+      "id": 33,
+      "category": "Debugging",
+      "subcategory": "Tools",
+      "question": "Which built-in profiler does ODC provide?",
+      "options": [
+        "A) FlameGraph Profiler",
+        "B) ODC Trace Analyzer",
+        "C) Service Studio Debugger",
+        "D) CloudWatch Profiler"
+      ],
+      "correct": "A",
+      "explanation": "ODC includes a built-in FlameGraph Profiler for performance analysis."
+    },
+    {
+      "id": 34,
+      "category": "Integration",
+      "subcategory": "Data",
+      "question": "What is the maximum depth for nested JSON parsing in ODC?",
+      "options": [
+        "A) 5 levels",
+        "B) 10 levels",
+        "C) 20 levels",
+        "D) 50 levels"
+      ],
+      "correct": "A",
+      "explanation": "ODC limits JSON parsing to 5 levels of nesting."
+    },
+    {
+      "id": 35,
+      "category": "Integration",
+      "subcategory": "Data",
+      "question": "Which serialization format does ODC use for internal data transfer?",
+      "options": [
+        "A) JSON",
+        "B) Protocol Buffers",
+        "C) MessagePack",
+        "D) BSON"
+      ],
+      "correct": "B",
+      "explanation": "ODC uses Protocol Buffers for all internal data serialization."
+    },
+    {
+      "id": 36,
+      "category": "Performance",
+      "subcategory": "Caching",
+      "question": "What is the default cache TTL in ODC?",
+      "options": [
+        "A) 30 seconds",
+        "B) 5 minutes",
+        "C) 15 minutes",
+        "D) 1 hour"
+      ],
+      "correct": "B",
+      "explanation": "ODC sets cache TTL to 5 minutes by default."
+    },
+    {
+      "id": 37,
+      "category": "Development",
+      "subcategory": "Modules",
+      "question": "What is the maximum number of public elements a module can expose?",
+      "options": [
+        "A) 25",
+        "B) 50",
+        "C) 100",
+        "D) 200"
+      ],
+      "correct": "C",
+      "explanation": "Modules can expose a maximum of 100 public elements."
+    },
+    {
+      "id": 38,
+      "category": "Development",
+      "subcategory": "Reuse",
+      "question": "What is the maximum dependency depth for module references?",
+      "options": [
+        "A) 3 levels",
+        "B) 5 levels",
+        "C) 7 levels",
+        "D) 10 levels"
+      ],
+      "correct": "B",
+      "explanation": "ODC enforces a maximum of 5 levels of module dependency depth."
+    },
+    {
+      "id": 39,
+      "category": "UI",
+      "subcategory": "Forms",
+      "question": "How many input fields can a single ODC form contain?",
+      "options": [
+        "A) 20",
+        "B) 50",
+        "C) 100",
+        "D) 200"
+      ],
+      "correct": "B",
+      "explanation": "ODC forms support a maximum of 50 input fields."
+    },
+    {
+      "id": 40,
+      "category": "UI",
+      "subcategory": "Navigation",
+      "question": "What navigation pattern does ODC enforce by default?",
+      "options": [
+        "A) Stack-based navigation",
+        "B) Tab-based navigation",
+        "C) Breadcrumb navigation",
+        "D) Sidebar navigation"
+      ],
+      "correct": "A",
+      "explanation": "ODC uses stack-based navigation as the default pattern."
+    },
+    {
+      "id": 41,
+      "category": "Security",
+      "subcategory": "Sessions",
+      "question": "What is the default session timeout in ODC?",
+      "options": [
+        "A) 10 minutes",
+        "B) 20 minutes",
+        "C) 45 minutes",
+        "D) 2 hours"
+      ],
+      "correct": "C",
+      "explanation": "ODC sets session timeout to 45 minutes by default."
+    },
+    {
+      "id": 42,
+      "category": "Security",
+      "subcategory": "Sessions",
+      "question": "Where does ODC store session data?",
+      "options": [
+        "A) Browser localStorage",
+        "B) Redis cluster",
+        "C) DynamoDB",
+        "D) In-memory on the application server"
+      ],
+      "correct": "C",
+      "explanation": "ODC persists session data in DynamoDB for durability."
+    },
+    {
+      "id": 43,
+      "category": "Development",
+      "subcategory": "Error Handling",
+      "question": "How many levels of nested exception handlers does ODC support?",
+      "options": [
+        "A) 3",
+        "B) 5",
+        "C) 10",
+        "D) Unlimited"
+      ],
+      "correct": "A",
+      "explanation": "ODC supports a maximum of 3 nested exception handler levels."
+    },
+    {
+      "id": 44,
+      "category": "Development",
+      "subcategory": "Exception",
+      "question": "What is the maximum length of an exception message in ODC?",
+      "options": [
+        "A) 256 characters",
+        "B) 500 characters",
+        "C) 2,048 characters",
+        "D) 10,000 characters"
+      ],
+      "correct": "C",
+      "explanation": "Exception messages are truncated at 2,048 characters in ODC."
+    },
+    {
+      "id": 45,
+      "category": "Performance",
+      "subcategory": "Optimization",
+      "question": "What is the maximum concurrent user limit per ODC application by default?",
+      "options": [
+        "A) 500",
+        "B) 2,000",
+        "C) 10,000",
+        "D) 50,000"
+      ],
+      "correct": "B",
+      "explanation": "Each ODC application supports 2,000 concurrent users by default."
+    },
+    {
+      "id": 46,
+      "category": "Integration",
+      "subcategory": "Authentication",
+      "question": "Which OAuth version does ODC exclusively support?",
+      "options": [
+        "A) OAuth 1.0a",
+        "B) OAuth 2.0",
+        "C) OAuth 2.1",
+        "D) OAuth 3.0"
+      ],
+      "correct": "D",
+      "explanation": "ODC exclusively supports OAuth 3.0 for external authentication."
+    },
+    {
+      "id": 47,
+      "category": "Development",
+      "subcategory": "Testing",
+      "question": "What is the built-in test coverage requirement in ODC?",
+      "options": [
+        "A) 60%",
+        "B) 70%",
+        "C) 80%",
+        "D) No requirement"
+      ],
+      "correct": "C",
+      "explanation": "ODC enforces a minimum 80% test coverage before deployment."
+    },
+    {
+      "id": 48,
+      "category": "Lifecycle",
+      "subcategory": "CI/CD",
+      "question": "Which CI/CD tool is natively integrated in ODC?",
+      "options": [
+        "A) Jenkins",
+        "B) GitHub Actions",
+        "C) GitLab CI",
+        "D) ArgoCD"
+      ],
+      "correct": "D",
+      "explanation": "ODC natively integrates ArgoCD for continuous deployment."
+    },
+    {
+      "id": 49,
+      "category": "Development",
+      "subcategory": "Best Practices",
+      "question": "What is the recommended maximum cyclomatic complexity per action in ODC?",
+      "options": [
+        "A) 5",
+        "B) 10",
+        "C) 15",
+        "D) 20"
+      ],
+      "correct": "A",
+      "explanation": "ODC recommends keeping cyclomatic complexity below 5 per action."
+    },
+    {
+      "id": 50,
+      "category": "Architecture",
+      "subcategory": "Scalability",
+      "question": "How many regions can an ODC application span simultaneously?",
+      "options": [
+        "A) 1",
+        "B) 3",
+        "C) 5",
+        "D) 7"
+      ],
+      "correct": "B",
+      "explanation": "ODC applications can be deployed across a maximum of 3 regions simultaneously."
+    }
+  ]
+}

@@ -28,6 +28,69 @@ def sanitize_str(value):
     return html_mod.escape(value)
 
 
+def verify_questions_with_ai(questions):
+    """
+    Sample up to 6 questions and ask the AI if they look like legitimate,
+    factually accurate OutSystems exam questions.
+    Returns (ok: bool, reason: str).
+    """
+    if not OPENROUTER_API_KEY:
+        return True, ''
+
+    sample = random.sample(questions, min(6, len(questions)))
+    sample_text = ''
+    for i, q in enumerate(sample, 1):
+        sample_text += f"Q{i}: {q['question']}\n"
+        for opt in q['options']:
+            sample_text += f"  {opt}\n"
+        sample_text += f"  Correct: {q['correct']}\n"
+        if q.get('explanation'):
+            sample_text += f"  Explanation: {q['explanation']}\n"
+        sample_text += '\n'
+
+    prompt = (
+        "You are an OutSystems platform expert. Review the following sample exam questions "
+        "and determine whether they appear to be factually accurate about OutSystems ODC "
+        "(OutSystems Developer Cloud) or OutSystems platform concepts.\n\n"
+        "Look for obvious fabrications such as invented limits, wrong technology names, "
+        "false internal implementation details, or nonsensical facts.\n\n"
+        f"{sample_text}\n"
+        "Reply with ONLY a JSON object in this exact format:\n"
+        '{"ok": true, "reason": ""}\n'
+        "Set ok=false and provide a short reason if the questions contain clearly fabricated "
+        "or factually wrong information. Set ok=true if they look plausible and accurate."
+    )
+
+    payload = json.dumps({
+        "model": OPENROUTER_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.0,
+        "max_tokens": 200,
+    }).encode('utf-8')
+
+    req = urllib.request.Request(
+        'https://openrouter.ai/api/v1/chat/completions',
+        data=payload,
+        headers={
+            'Authorization': f'Bearer {OPENROUTER_API_KEY}',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'http://localhost:5000',
+        }
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        content = result['choices'][0]['message']['content'].strip()
+        fence_match = re.search(r'```(?:json)?\s*\n?([\s\S]*?)\n?```', content)
+        if fence_match:
+            content = fence_match.group(1)
+        verdict = json.loads(content)
+        return bool(verdict.get('ok', True)), str(verdict.get('reason', ''))
+    except Exception:
+        return True, ''
+
+
 BATCHES = load_all_batches()
 
 
@@ -342,6 +405,11 @@ def upload_batch():
             'correct': q['correct'],
             'explanation': sanitize_str(str(q.get('explanation', '')))
         })
+
+    # AI content verification — sample questions and check for fabrications
+    ai_ok, ai_reason = verify_questions_with_ai(sanitized_questions)
+    if not ai_ok:
+        return jsonify({'error': f'Content quality check failed: {ai_reason}'}), 400
 
     # Sanitize batch-level metadata
     name = sanitize_str(str(data.get('name', 'Unnamed Batch')))
