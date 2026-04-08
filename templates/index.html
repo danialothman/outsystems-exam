@@ -191,22 +191,23 @@
             overflow: hidden;
         }
 
+        .question-header-bar {
+            padding: 16px 40px 14px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
         .question-view {
             flex: 1;
             overflow-y: auto;
-            padding: 40px;
+            padding: 32px 40px 40px;
             display: flex;
             flex-direction: column;
         }
 
         .question-header {
-            position: sticky;
-            top: 0;
-            background: #f5f5f5;
-            z-index: 10;
-            padding: 12px 0 16px;
-            margin-bottom: 14px;
-            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 0;
         }
 
         .question-number {
@@ -732,6 +733,7 @@
 
         <!-- Main content area -->
         <div class="exam-content">
+            <div class="question-header-bar" id="questionHeaderBar" style="display:none"></div>
             <div class="question-view" id="questionView">
                 <div class="loading">Loading questions...</div>
             </div>
@@ -851,16 +853,20 @@
             currentQuestion = index;
             const q = questions[index];
 
-            const html = `
-                <div class="question-header">
-                    <div class="question-number">Question ${q.id} of ${questions.length}</div>
-                    <div class="question-meta">
-                        <span class="category-badge">${escapeHtml(q.category)}</span>
-                        <span class="subcategory-badge">${escapeHtml(q.subcategory)}</span>
-                        ${q.is_o11 ? `<span class="o11-badge" title="${escapeHtml(q.o11_note || 'O11 specific')}">O11 Only</span>` : ''}
-                    </div>
+            // Header bar — always visible, outside the scroll zone
+            const headerBar = document.getElementById('questionHeaderBar');
+            headerBar.style.display = 'block';
+            headerBar.innerHTML = `
+                <div class="question-number">Question ${q.id} of ${questions.length}</div>
+                <div class="question-meta">
+                    <span class="category-badge">${escapeHtml(q.category)}</span>
+                    <span class="subcategory-badge">${escapeHtml(q.subcategory)}</span>
+                    ${q.is_o11 ? `<span class="o11-badge" title="${escapeHtml(q.o11_note || 'O11 specific')}">O11 Only</span>` : ''}
                 </div>
+            `;
 
+            // Scrollable body — question text, options, actions
+            const html = `
                 <div class="question-text">${escapeHtml(q.question)}</div>
 
                 <div class="options-container">
@@ -896,6 +902,7 @@
             `;
 
             document.getElementById('questionView').innerHTML = html;
+            document.getElementById('questionView').scrollTop = 0;
             renderQuestionGrid();
             updateProgress();
         }
