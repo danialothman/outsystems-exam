@@ -209,7 +209,7 @@ def generate_batch():
             return jsonify({'error': f'Please wait {remaining} seconds before generating again.', 'cooldown': remaining}), 429
 
     MODEL_FREE = 'google/gemma-4-31b-it:free'
-    MODEL_PAID = 'google/gemma-4-31b-it'
+    MODEL_PAID = 'anthropic/claude-3-5-haiku'
     ALLOWED_MODELS = {MODEL_FREE, MODEL_PAID}
 
     data = request.get_json()
