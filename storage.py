@@ -5,6 +5,9 @@ Auto-detects environment: uses Replit App Storage on Replit, local filesystem ot
 import json
 import os
 import glob as glob_mod
+import logging
+
+logger = logging.getLogger(__name__)
 
 QUESTIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'questions')
 IS_REPLIT = bool(os.environ.get('REPL_ID'))
@@ -61,10 +64,11 @@ def load_all_batches():
                     content = client.download_as_text(name)
                     data = json.loads(content)
                     batches[name] = _parse_batch(name, data)
-                except Exception:
+                except Exception as e:
+                    logger.warning(f'[storage] Failed to load {name} from bucket: {e}')
                     continue
-        except Exception:
-            pass  # App Storage not available, local-only mode
+        except Exception as e:
+            logger.error(f'[storage] Could not connect to bucket: {e}')
 
     return batches
 
@@ -77,12 +81,14 @@ def save_batch(filename, data):
         try:
             client = _get_replit_client()
             client.upload_from_text(filename, json_str)
+            logger.info(f'[storage] Saved {filename} to bucket OK')
             return
-        except Exception:
-            pass  # Fall through to local save
+        except Exception as e:
+            logger.error(f'[storage] Bucket save FAILED for {filename}: {e} — falling back to local disk (will not persist across deploys)')
 
     # Local filesystem save
     os.makedirs(QUESTIONS_DIR, exist_ok=True)
     filepath = os.path.join(QUESTIONS_DIR, filename)
     with open(filepath, 'w') as f:
         f.write(json_str)
+    logger.info(f'[storage] Saved {filename} to local disk')

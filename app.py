@@ -10,8 +10,11 @@ import json
 import os
 import re
 import html as html_mod
+import logging
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO, format='%(levelname)s %(message)s')
 
 app = Flask(__name__)
 app.secret_key = 'outsystems-exam-simulator-2024'
