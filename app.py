@@ -209,8 +209,8 @@ def generate_batch():
             return jsonify({'error': f'Please wait {remaining} seconds before generating again.', 'cooldown': remaining}), 429
 
     MODEL_FREE = 'google/gemma-4-31b-it:free'
-    MODEL_PAID = 'anthropic/claude-3-5-haiku'
-    ALLOWED_MODELS = {MODEL_FREE, MODEL_PAID}
+    ALLOWED_MODELS = {MODEL_FREE, 'google/gemma-4-31b-it', 'anthropic/claude-3-5-haiku'}
+    PAID_MODELS = {'google/gemma-4-31b-it', 'anthropic/claude-3-5-haiku'}
 
     data = request.get_json()
     topic_key = str(data.get('topic_key', '')).strip()
@@ -222,7 +222,7 @@ def generate_batch():
     if model not in ALLOWED_MODELS:
         model = MODEL_FREE
 
-    if model == MODEL_PAID:
+    if model in PAID_MODELS:
         ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
         allowed, rate_reason = _check_paid_gen_rate(ip)
         if not allowed:
