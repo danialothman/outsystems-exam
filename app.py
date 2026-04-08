@@ -213,6 +213,7 @@ def get_session_questions():
 @app.route('/')
 def landing():
     """Landing page - prompt user to start exam"""
+    session['ui_access'] = True
     return render_template('landing.html')
 
 @app.route('/api/batches')
@@ -471,9 +472,10 @@ def generate_batch():
 @app.route('/api/upload-batch', methods=['POST'])
 def upload_batch():
     """Upload a new question batch JSON file."""
-    allowed, err = _check_admin_key()
-    if not allowed:
-        return err
+    if not session.get('ui_access'):
+        allowed, err = _check_admin_key()
+        if not allowed:
+            return err
 
     ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
     allowed, rate_reason = _check_upload_rate(ip)
