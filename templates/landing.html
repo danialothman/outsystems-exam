@@ -856,6 +856,21 @@
             tick();
         }
 
+        var _generationGuard = null;
+        function enableNavGuard() {
+            _generationGuard = function(e) {
+                e.preventDefault();
+                e.returnValue = '';
+            };
+            window.addEventListener('beforeunload', _generationGuard);
+        }
+        function disableNavGuard() {
+            if (_generationGuard) {
+                window.removeEventListener('beforeunload', _generationGuard);
+                _generationGuard = null;
+            }
+        }
+
         // Generate on site via OpenRouter
         document.getElementById('generateAiBtn').addEventListener('click', async function() {
             var btn = this;
@@ -866,6 +881,7 @@
                 return;
             }
 
+            enableNavGuard();
             btn.classList.add('loading');
             btn.disabled = true;
             var origHtml = btn.textContent;
@@ -874,8 +890,8 @@
             spinner.textContent = '\u2699';
             btn.appendChild(spinner);
             btn.appendChild(document.createTextNode(' Generating... this may take a minute'));
-            status.textContent = 'Sending request to AI model...';
-            status.style.color = '#6b7280';
+            status.textContent = '\u26a0\ufe0f Generating — do not close or navigate away...';
+            status.style.color = '#d97706';
 
             try {
                 var res = await fetch('/api/generate-batch', {
@@ -886,6 +902,7 @@
                 var result = await res.json();
 
                 if (result.success) {
+                    disableNavGuard();
                     var msg = 'Generated "' + result.name + '" with ' + result.count + ' questions!';
                     if (result.warning) {
                         msg += ' (' + result.warning + ')';
@@ -906,6 +923,7 @@
                     }
                     startCooldown(result.cooldown || 120);
                 } else {
+                    disableNavGuard();
                     if (result.cooldown) {
                         startCooldown(result.cooldown);
                     }
@@ -913,6 +931,7 @@
                     status.style.color = '#ef4444';
                 }
             } catch (err) {
+                disableNavGuard();
                 status.textContent = 'Request failed. Check your connection.';
                 status.style.color = '#ef4444';
             }
