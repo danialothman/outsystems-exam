@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, jsonify, session, redirect
 from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+from storage import load_all_batches, save_batch
 import urllib.request
 import urllib.error
-import glob as glob_mod
 import random
 import json
 import os
@@ -16,7 +16,6 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = 'outsystems-exam-simulator-2024'
 
-QUESTIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'questions')
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
@@ -29,28 +28,7 @@ def sanitize_str(value):
     return html_mod.escape(value)
 
 
-def load_batches():
-    """Scan questions/ folder and return dict of filename -> batch data."""
-    batches = {}
-    os.makedirs(QUESTIONS_DIR, exist_ok=True)
-    for filepath in sorted(glob_mod.glob(os.path.join(QUESTIONS_DIR, '*.json'))):
-        try:
-            with open(filepath, 'r') as f:
-                data = json.load(f)
-            filename = os.path.basename(filepath)
-            batches[filename] = {
-                'name': data.get('name', filename),
-                'time_limit': data.get('time_limit', 7200),
-                'passing_score': data.get('passing_score', 70),
-                'questions': data['questions'],
-                'count': len(data['questions'])
-            }
-        except (json.JSONDecodeError, KeyError):
-            continue
-    return batches
-
-
-BATCHES = load_batches()
+BATCHES = load_all_batches()
 
 
 def get_session_questions():
@@ -271,13 +249,11 @@ def generate_batch():
         'questions': sanitized_questions
     }
 
-    # Save to disk
+    # Save batch
     safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '_', topic.lower())[:40]
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f'generated_{safe_topic}_{timestamp}.json'
-    filepath = os.path.join(QUESTIONS_DIR, filename)
-    with open(filepath, 'w') as f:
-        json.dump(sanitized_data, f, indent=2)
+    save_batch(filename, sanitized_data)
 
     BATCHES[filename] = {
         'name': sanitized_data['name'],
@@ -386,10 +362,7 @@ def upload_batch():
     filename = secure_filename(file.filename)
     if not filename or filename == '':
         filename = 'upload.json'
-    filepath = os.path.join(QUESTIONS_DIR, filename)
-
-    with open(filepath, 'w') as f:
-        json.dump(sanitized_data, f, indent=2)
+    save_batch(filename, sanitized_data)
 
     BATCHES[filename] = {
         'name': sanitized_data['name'],
@@ -541,4 +514,6 @@ def reset():
     return redirect('/')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5001))
+    debug = not os.environ.get('REPL_ID')  # debug off on Replit
+    app.run(host='0.0.0.0', port=port, debug=debug)
