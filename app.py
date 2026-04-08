@@ -611,6 +611,7 @@ def index():
         session['flagged'] = []
         session['time_limit'] = batch['time_limit']
         session['passing_score'] = batch['passing_score']
+        session['o11_only_questions'] = {str(k): v for k, v in batch.get('o11_only_questions', {}).items()}
         return render_template('index.html')
     elif 'batch_key' in session and session['batch_key'] in BATCHES:
         return render_template('index.html')
@@ -620,14 +621,18 @@ def index():
 @app.route('/api/questions')
 def get_questions():
     """Get all questions without answers"""
+    o11_map = session.get('o11_only_questions', {})
     questions_for_client = []
     for q in get_session_questions():
+        q_id = str(q['id'])
         questions_for_client.append({
             'id': q['id'],
             'category': q['category'],
             'subcategory': q['subcategory'],
             'question': q['question'],
-            'options': q['options']
+            'options': q['options'],
+            'is_o11': q_id in o11_map,
+            'o11_note': o11_map.get(q_id, ''),
         })
     return jsonify(questions_for_client)
 
@@ -638,6 +643,7 @@ def submit_exam():
     user_answers = data.get('answers', {})
 
     questions = get_session_questions()
+    o11_map = session.get('o11_only_questions', {})
     score = 0
     results = []
 
@@ -657,7 +663,9 @@ def submit_exam():
             'options': question['options'],
             'correct': question['correct'],
             'user_answer': user_answer,
-            'is_correct': is_correct
+            'is_correct': is_correct,
+            'is_o11': q_id_str in o11_map,
+            'o11_note': o11_map.get(q_id_str, ''),
         })
 
     percentage = (score / len(questions)) * 100

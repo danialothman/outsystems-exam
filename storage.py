@@ -30,7 +30,8 @@ def _parse_batch(filename, data):
         'time_limit': data.get('time_limit', 7200),
         'passing_score': data.get('passing_score', 70),
         'questions': data['questions'],
-        'count': len(data['questions'])
+        'count': len(data['questions']),
+        'o11_only_questions': data.get('o11_only_questions', {}),
     }
 
 

@@ -1,0 +1,150 @@
+{
+  "name": "[Quizlet] OutSystems Associate Developer Practice Test (90% ODC-relevant)",
+  "time_limit": 7200,
+  "passing_score": 70,
+  "questions": [
+    {
+      "id": 1,
+      "category": "Data Modeling",
+      "subcategory": "Relationships",
+      "question": "If you were to design a database for an online bookstore, how would you implement a many-to-many relationship between Authors and Books?",
+      "options": [
+        "A) Use a single Entity to represent both Authors and Books",
+        "B) Create separate Entities for Authors and Books without any linking Entity",
+        "C) Create a third Entity that contains attributes for Author Identifier and Book Identifier",
+        "D) Establish a one-to-many relationship between Authors and Books"
+      ],
+      "correct": "C",
+      "explanation": "A many-to-many relationship requires a junction entity with two foreign key attributes \u2014 one referencing Authors and one referencing Books. A single entity conflates two concepts. Separate entities without a link can't represent the relationship. A one-to-many only allows one author per book."
+    },
+    {
+      "id": 2,
+      "category": "Data Modeling",
+      "subcategory": "Entity Identifiers",
+      "question": "What is the characteristic of an Entity Identifier in OutSystems?",
+      "options": [
+        "A) An Entity Identifier must have its Data Type set to Long Integer",
+        "B) An Entity Identifier can only be a single attribute",
+        "C) An Entity Identifier is created automatically and cannot be modified",
+        "D) An Entity Identifier must be set to Auto Number"
+      ],
+      "correct": "B",
+      "explanation": "Entity Identifiers in OutSystems are always a single attribute. They are created automatically but CAN be modified (e.g. changing data type). They default to Long Integer but this can be changed. Auto Number is optional, not required."
+    },
+    {
+      "id": 3,
+      "category": "Fetching Data",
+      "subcategory": "Aggregates",
+      "question": "How many attributes will the GetOrdersShippingState.List.Current record contain according to the Aggregate shown (with Group By on ShippingState and Count)?",
+      "options": [
+        "A) The two aggregation attributes (ShippingState and Count) plus all the attributes of the Source Entities",
+        "B) The two aggregation attributes (ShippingState and Count) plus the columns used to calculate these aggregations",
+        "C) Two aggregation attributes: ShippingState and Count",
+        "D) Six attributes corresponding to the six visible columns in the Aggregate: ShippingState, Count, Description, CreatedOn, ShippedOn, and Priority"
+      ],
+      "correct": "C",
+      "explanation": "When using aggregation functions (Group By, Count, Sum, etc.), the output only includes the aggregated attributes. Non-aggregated source entity attributes are excluded from the output. Only ShippingState (Group By) and Count appear."
+    },
+    {
+      "id": 4,
+      "category": "Fetching Data",
+      "subcategory": "Joins",
+      "question": "What does the Aggregate return regarding Orders and Employees when using a 'With or Without' join?",
+      "options": [
+        "A) Orders without Employee and without Status",
+        "B) Orders with Status and at least one Employee",
+        "C) Orders with Priority and with zero or more Employees",
+        "D) Orders only with Priority and Status"
+      ],
+      "correct": "C",
+      "explanation": "'With or Without' is a LEFT JOIN \u2014 it returns all records from the left entity (Orders) even if there is no match in the right entity (Employees). So Orders are returned with zero or more Employees."
+    },
+    {
+      "id": 5,
+      "category": "Fetching Data",
+      "subcategory": "Aggregates",
+      "question": "What is the correct method to modify an Aggregate to count orders based on priority in OutSystems?",
+      "options": [
+        "A) Create a Group By over the Priority.Id attribute and a Count over the Order.Id attribute",
+        "B) Change the Join between the Order and the Priority to Only With and create a Count over the Priority.Id attribute",
+        "C) Use a Filter to limit the results to a specific priority and count the Order.Id",
+        "D) Add a Sort By clause to order the results by priority before counting"
+      ],
+      "correct": "A",
+      "explanation": "To count orders per priority: Group By the dimension you want to group on (Priority.Id) and Count the thing you want to count (Order.Id). Filters limit to one priority. Sort By doesn't aggregate. Changing the join type doesn't produce counts."
+    },
+    {
+      "id": 6,
+      "category": "Reactive Apps",
+      "subcategory": "Screen Lifecycle",
+      "question": "What is the purpose of the On Initialize lifecycle event in OutSystems?",
+      "options": [
+        "A) To act upon the retrieved data after an Aggregate finishes fetching",
+        "B) To respond to changes in the input parameter of a Block",
+        "C) To manipulate the structure of the Screen or Block after rendering",
+        "D) To execute logic before the Screen or Block is rendered and before fetching any data"
+      ],
+      "correct": "D",
+      "explanation": "On Initialize runs first in the lifecycle \u2014 before rendering and before data fetching. Option A describes On After Fetch. Option B describes OnParametersChanged. Option C describes On Ready."
+    },
+    {
+      "id": 7,
+      "category": "Fetching Data",
+      "subcategory": "Dependent Dropdowns",
+      "question": "Which option describes an invalid method for fetching cities based on a selected country in OutSystems?",
+      "options": [
+        "A) Call the GetCities Aggregate in the GetCountries' On After Fetch Event handler",
+        "B) Set the Fetch property of the GetCities Aggregate to Only On Demand",
+        "C) Filter the GetCities Aggregate by the selected country",
+        "D) Refresh the GetCities Aggregate in the OnChange Action of the Country Dropdown"
+      ],
+      "correct": "A",
+      "explanation": "Calling GetCities in GetCountries' On After Fetch is invalid because no country has been selected yet at that point \u2014 the countries just finished loading. The other three options are all valid steps for implementing dependent dropdowns."
+    },
+    {
+      "id": 8,
+      "category": "UI Design",
+      "subcategory": "Blocks",
+      "question": "Which option correctly describes where Blocks can be instantiated in OutSystems reactive apps?",
+      "options": [
+        "A) Blocks can be instantiated on Screens and external HTML pages",
+        "B) Blocks can be instantiated on Client Actions on the Screen",
+        "C) Blocks can only be instantiated on Screens",
+        "D) Blocks can be instantiated on Screens and other Blocks"
+      ],
+      "correct": "D",
+      "explanation": "Blocks are reusable UI components that can be placed on Screens and nested inside other Blocks. They cannot be placed in Client Actions (logic, not UI) or in external HTML pages."
+    },
+    {
+      "id": 9,
+      "category": "UI Design",
+      "subcategory": "Events",
+      "question": "In a scenario where you need to notify multiple components of a user action, how would you utilize the Trigger Event node?",
+      "options": [
+        "A) You would bypass the Trigger Event node and use a direct function call",
+        "B) You would create a new user interface element to handle the action instead",
+        "C) You would configure the Trigger Event node to emit an event that all relevant components can listen for and respond to accordingly",
+        "D) You would use the Trigger Event node to directly modify the database records"
+      ],
+      "correct": "C",
+      "explanation": "Trigger Event emits an event from a Block that parent components can listen for and handle. It's an event-based communication pattern \u2014 not for direct DB modifications, not bypassed with function calls, and not replaced by UI elements."
+    },
+    {
+      "id": 10,
+      "category": "UI Design",
+      "subcategory": "Events",
+      "question": "What is the primary purpose of the Trigger Event in a Block within OutSystems?",
+      "options": [
+        "A) Notify its parent that something relevant occurred in the scope of the Screen",
+        "B) Notify its children that something relevant occurred in the scope of the Screen",
+        "C) Notify its children that something relevant occurred in the scope of the Block",
+        "D) Notify its parent that something relevant occurred in the scope of the Block"
+      ],
+      "correct": "D",
+      "explanation": "Events flow upward: Block \u2192 Parent. A Block fires Trigger Event to notify its parent (Screen or containing Block) that something happened within the Block's scope. Communication downward (parent to child) is done via Input Parameters."
+    }
+  ],
+  "o11_only_questions": {
+    "10": "Mobile-specific, not core ODC Associate"
+  }
+}
