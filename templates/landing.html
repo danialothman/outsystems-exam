@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OutSystems Exam Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .landing-card {
+            background: white;
+            border-radius: 16px;
+            padding: 60px;
+            max-width: 600px;
+            width: 90%;
+            color: #333;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .landing-icon {
+            font-size: 48px;
+            margin-bottom: 24px;
+        }
+
+        .landing-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .landing-subtitle {
+            font-size: 16px;
+            color: #4f46e5;
+            font-weight: 600;
+            margin-bottom: 32px;
+        }
+
+        .batch-select-wrapper {
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .batch-select-wrapper label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .batch-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #1a202c;
+            background: white;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+
+        .batch-select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .exam-details {
+            text-align: left;
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .exam-details h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: #1a202c;
+            font-size: 14px;
+        }
+
+        .btn-start {
+            display: inline-block;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-start:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-start.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* --- Generate section --- */
+        .generate-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 28px 0 20px;
+            color: #9ca3af;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .generate-divider::before,
+        .generate-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .btn-generate {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 20px;
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: inherit;
+        }
+        .btn-generate:hover {
+            border-color: #4f46e5;
+            background: #f0f4ff;
+            color: #4f46e5;
+        }
+        .btn-generate .gen-icon {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+        .btn-generate:hover .gen-icon {
+            transform: rotate(15deg) scale(1.1);
+        }
+
+        /* Wizard panel */
+        .wizard-panel {
+            display: none;
+            margin-top: 16px;
+            text-align: left;
+        }
+        .wizard-panel.show {
+            display: block;
+        }
+
+        .wizard-step {
+            margin-bottom: 20px;
+        }
+        .wizard-step-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .step-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .topic-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .topic-card {
+            padding: 6px 12px;
+            border: 1.5px solid #e0e7ff;
+            border-radius: 20px;
+            background: white;
+            color: #4f46e5;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .topic-card:hover {
+            border-color: #4f46e5;
+            background: #f0f4ff;
+        }
+        .topic-card.selected {
+            border-color: #4f46e5;
+            background: #4f46e5;
+            color: white;
+        }
+
+        .custom-topic-input {
+            display: none;
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px 12px;
+            border: 1.5px solid #e0e7ff;
+            border-radius: 8px;
+            background: #f9fafb;
+            color: #1a202c;
+            font-size: 12px;
+            font-family: inherit;
+        }
+        .custom-topic-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            background: white;
+        }
+        .custom-topic-input.show {
+            display: block;
+        }
+
+        .btn-copy-prompt {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-copy-prompt:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-generate-ai {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px 16px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-generate-ai:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .btn-generate-ai:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-generate-ai.loading {
+            background: #6b7280;
+            pointer-events: none;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .btn-generate-ai.loading span:first-child {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        .method-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 14px 0;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+        .method-divider::before,
+        .method-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .step-hint {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .upload-drop-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 16px;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-drop-zone:hover {
+            border-color: #4f46e5;
+            background: #f0f4ff;
+        }
+        .upload-drop-zone .drop-icon {
+            font-size: 20px;
+        }
+        .upload-drop-zone .drop-text {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .upload-drop-zone .drop-text span {
+            color: #4f46e5;
+            font-weight: 600;
+        }
+
+        #uploadStatus {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .schema-peek {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #9ca3af;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0;
+        }
+        .schema-peek:hover {
+            color: #4f46e5;
+        }
+        .schema-box {
+            display: none;
+            margin-top: 10px;
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .schema-box.show {
+            display: block;
+        }
+        .schema-box pre {
+            font-size: 10px;
+            color: #a5b4fc;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .landing-footer {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-card">
+        <div class="landing-icon">&#x1F4DD;</div>
+        <h1 class="landing-title">OutSystems Exam Simulator</h1>
+        <p class="landing-subtitle">Practice exams for any OutSystems certification</p>
+
+        <div class="batch-select-wrapper">
+            <label for="batchSelect">Question Batch</label>
+            <select class="batch-select" id="batchSelect">
+                <option>Loading...</option>
+            </select>
+        </div>
+
+        <div class="exam-details">
+            <h3>Exam Details</h3>
+            <div class="detail-row">
+                <span class="detail-label">Questions</span>
+                <span class="detail-value" id="detailCount">--</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Time Limit</span>
+                <span class="detail-value" id="detailTime">--</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Passing Score</span>
+                <span class="detail-value" id="detailPassing">--</span>
+            </div>
+        </div>
+
+        <a href="#" class="btn-start disabled" id="startBtn">Start Exam</a>
+
+        <div class="generate-divider">or</div>
+
+        <button class="btn-generate" id="generateToggle">
+            <span class="gen-icon">&#x2728;</span>
+            Generate Your Own Questions
+        </button>
+
+        <div class="wizard-panel" id="wizardPanel">
+            <div class="wizard-step">
+                <div class="wizard-step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Pick a certification topic</div>
+                </div>
+                <div class="topic-cards" id="topicCards">
+                    <div class="topic-card selected" data-topic="OutSystems ODC Associate Developer certification">ODC Associate Developer</div>
+                    <div class="topic-card" data-topic="OutSystems Architecture Specialist certification">Architecture Specialist</div>
+                    <div class="topic-card" data-topic="OutSystems Web Developer Specialist certification">Web Developer Specialist</div>
+                    <div class="topic-card" data-topic="OutSystems Security Specialist certification">Security Specialist</div>
+                    <div class="topic-card" data-topic="OutSystems Mobile Developer Specialist certification">Mobile Developer Specialist</div>
+                    <div class="topic-card" data-topic="OutSystems Agentic AI certification">Agentic AI Certification</div>
+                    <div class="topic-card" data-topic="custom">Custom</div>
+                </div>
+                <input type="text" class="custom-topic-input" id="customTopicInput" placeholder="Enter your exam topic...">
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Generate questions</div>
+                </div>
+                <button class="btn-generate-ai" id="generateAiBtn">
+                    <span>&#x26A1;</span> Generate Now
+                </button>
+                <p class="step-hint" id="generateStatus">Uses a free AI model via OpenRouter to generate 50 questions instantly.</p>
+
+                <div class="method-divider"><span>or generate manually</span></div>
+
+                <button class="btn-copy-prompt" id="copySchemaBtn">
+                    <span>&#x1F4CB;</span> Copy AI Prompt to Clipboard
+                </button>
+                <p class="step-hint">Copy this prompt into ChatGPT, Claude, or any LLM, then upload the result below.</p>
+
+                <div style="margin-top: 10px; padding: 10px 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; font-size: 11px; color: #92400e; line-height: 1.5; text-align: left;">
+                    <strong>Tip:</strong> Question quality depends on the context you give the AI. For better results, include the certification syllabus, topic weightage, or study guide alongside the prompt. The more detail you provide, the more realistic your practice exam will be.
+                </div>
+            </div>
+
+            <div class="wizard-step">
+                <div class="wizard-step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Upload the generated file</div>
+                </div>
+                <p class="step-hint" style="margin-bottom: 8px; margin-top: 0;">Only needed if you used the manual copy-prompt method above.</p>
+                <label class="upload-drop-zone" for="batchFile">
+                    <span class="drop-icon">&#x1F4C1;</span>
+                    <span class="drop-text"><span>Choose a .json file</span> or drag it here</span>
+                    <input type="file" id="batchFile" accept=".json" style="display: none;">
+                </label>
+                <p id="uploadStatus"></p>
+
+                <button class="schema-peek" id="schemaToggle">&#x1F50D; View expected JSON format</button>
+                <div class="schema-box" id="schemaBox">
+                    <pre id="schemaPre"></pre>
+                </div>
+            </div>
+        </div>
+
+        <p class="landing-footer">The timer begins once you start the exam.</p>
+    </div>
+
+    <script>
+        let batches = [];
+
+        function clearSelect(select) {
+            while (select.firstChild) {
+                select.removeChild(select.firstChild);
+            }
+        }
+
+        function addOption(select, value, text) {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = text;
+            select.appendChild(opt);
+            return opt;
+        }
+
+        async function loadBatches() {
+            const res = await fetch('/api/batches');
+            batches = await res.json();
+            const select = document.getElementById('batchSelect');
+            const startBtn = document.getElementById('startBtn');
+            clearSelect(select);
+
+            if (batches.length === 0) {
+                addOption(select, '', 'No batches available');
+                startBtn.classList.add('disabled');
+                clearDetails();
+                return;
+            }
+
+            batches.forEach(function(b) {
+                const opt = addOption(select, b.key, b.name + ' (' + b.count + ' questions)');
+                opt.dataset.timeLimit = b.time_limit;
+                opt.dataset.passingScore = b.passing_score;
+                opt.dataset.count = b.count;
+            });
+
+            startBtn.classList.remove('disabled');
+            updateDetails();
+        }
+
+        function updateDetails() {
+            const sel = document.getElementById('batchSelect');
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt || !opt.dataset.count) return;
+            document.getElementById('detailCount').textContent = opt.dataset.count + ' multiple choice';
+            document.getElementById('detailTime').textContent = Math.floor(opt.dataset.timeLimit / 60) + ' minutes';
+            document.getElementById('detailPassing').textContent = opt.dataset.passingScore + '%';
+        }
+
+        function clearDetails() {
+            document.getElementById('detailCount').textContent = '--';
+            document.getElementById('detailTime').textContent = '--';
+            document.getElementById('detailPassing').textContent = '--';
+        }
+
+        document.getElementById('batchSelect').addEventListener('change', updateDetails);
+
+        document.getElementById('startBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const sel = document.getElementById('batchSelect');
+            if (sel.value && batches.length > 0) {
+                window.location.href = '/exam?batch=' + encodeURIComponent(sel.value);
+            }
+        });
+
+        document.getElementById('batchFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const status = document.getElementById('uploadStatus');
+            status.textContent = 'Uploading...';
+            status.style.color = '#6b7280';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await fetch('/api/upload-batch', { method: 'POST', body: formData });
+                const result = await res.json();
+
+                if (result.success) {
+                    status.textContent = 'Uploaded "' + result.name + '" (' + result.count + ' questions)';
+                    status.style.color = '#10b981';
+                    await loadBatches();
+                } else {
+                    status.textContent = 'Error: ' + result.error;
+                    status.style.color = '#ef4444';
+                }
+            } catch (err) {
+                status.textContent = 'Upload failed';
+                status.style.color = '#ef4444';
+            }
+            e.target.value = '';
+        });
+
+        // Schema info
+        var schemaExample = '{\n' +
+            '  "name": "Your Batch Name",\n' +
+            '  "time_limit": 7200,\n' +
+            '  "passing_score": 70,\n' +
+            '  "questions": [\n' +
+            '    {\n' +
+            '      "id": 1,\n' +
+            '      "category": "Topic Area",\n' +
+            '      "subcategory": "Subtopic",\n' +
+            '      "question": "Your question text?",\n' +
+            '      "options": [\n' +
+            '        "A) First option",\n' +
+            '        "B) Second option",\n' +
+            '        "C) Third option",\n' +
+            '        "D) Fourth option"\n' +
+            '      ],\n' +
+            '      "correct": "A",\n' +
+            '      "explanation": "Why A is correct."\n' +
+            '    }\n' +
+            '  ]\n' +
+            '}';
+
+        var selectedTopic = 'OutSystems ODC Associate Developer certification';
+
+        function getAiPrompt() {
+            var topic = selectedTopic;
+            if (topic === 'custom') {
+                topic = document.getElementById('customTopicInput').value.trim() || '[YOUR TOPIC HERE]';
+            }
+            return 'Generate a practice exam as a JSON file with exactly this structure:\n\n' +
+                schemaExample + '\n\n' +
+                'Rules:\n' +
+                '- Generate 50 multiple-choice questions on ' + topic + '\n' +
+                '- Each question must have exactly 4 options labeled A), B), C), D)\n' +
+                '- "correct" must be one of: "A", "B", "C", "D"\n' +
+                '- "id" must be a unique positive integer starting from 1\n' +
+                '- "time_limit" is in seconds (7200 = 2 hours)\n' +
+                '- "passing_score" is a percentage (70 = 70%)\n' +
+                '- Include category and subcategory to group questions by topic\n' +
+                '- Include an explanation for each correct answer\n' +
+                '- Output only valid JSON, no markdown or extra text';
+        }
+
+        // Topic card selection
+        document.getElementById('topicCards').addEventListener('click', function(e) {
+            var card = e.target.closest('.topic-card');
+            if (!card) return;
+
+            var cards = this.querySelectorAll('.topic-card');
+            cards.forEach(function(c) { c.classList.remove('selected'); });
+            card.classList.add('selected');
+
+            selectedTopic = card.dataset.topic;
+            var customInput = document.getElementById('customTopicInput');
+            if (selectedTopic === 'custom') {
+                customInput.classList.add('show');
+                customInput.focus();
+            } else {
+                customInput.classList.remove('show');
+            }
+        });
+
+        document.getElementById('schemaPre').textContent = schemaExample;
+
+        // Generate toggle
+        document.getElementById('generateToggle').addEventListener('click', function() {
+            var panel = document.getElementById('wizardPanel');
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                this.querySelector('.gen-icon').textContent = '\u2728';
+            } else {
+                panel.classList.add('show');
+                this.querySelector('.gen-icon').textContent = '\u2715';
+            }
+        });
+
+        // Schema peek toggle
+        document.getElementById('schemaToggle').addEventListener('click', function() {
+            var box = document.getElementById('schemaBox');
+            box.classList.toggle('show');
+        });
+
+        document.getElementById('copySchemaBtn').addEventListener('click', async function() {
+            try {
+                await navigator.clipboard.writeText(getAiPrompt());
+                var origText = this.textContent;
+                this.textContent = 'Copied!';
+                this.style.background = '#10b981';
+                var btn = this;
+                setTimeout(function() {
+                    btn.textContent = origText;
+                    btn.style.background = '';
+                }, 2000);
+            } catch (err) {
+                this.textContent = 'Failed to copy';
+            }
+        });
+
+        // Generate on site via OpenRouter
+        document.getElementById('generateAiBtn').addEventListener('click', async function() {
+            var btn = this;
+            var status = document.getElementById('generateStatus');
+            var topic = selectedTopic;
+            if (topic === 'custom') {
+                topic = document.getElementById('customTopicInput').value.trim();
+                if (!topic) {
+                    status.textContent = 'Please enter a custom topic first.';
+                    status.style.color = '#ef4444';
+                    return;
+                }
+            }
+
+            btn.classList.add('loading');
+            btn.disabled = true;
+            var origHtml = btn.textContent;
+            btn.textContent = '';
+            var spinner = document.createElement('span');
+            spinner.textContent = '\u2699';
+            btn.appendChild(spinner);
+            btn.appendChild(document.createTextNode(' Generating... this may take a minute'));
+            status.textContent = 'Sending request to AI model...';
+            status.style.color = '#6b7280';
+
+            try {
+                var res = await fetch('/api/generate-batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic: topic })
+                });
+                var result = await res.json();
+
+                if (result.success) {
+                    status.textContent = 'Generated "' + result.name + '" with ' + result.count + ' questions!';
+                    status.style.color = '#10b981';
+                    await loadBatches();
+                    // Auto-select the new batch
+                    var sel = document.getElementById('batchSelect');
+                    for (var i = 0; i < sel.options.length; i++) {
+                        if (sel.options[i].value === result.key) {
+                            sel.selectedIndex = i;
+                            updateDetails();
+                            break;
+                        }
+                    }
+                } else {
+                    status.textContent = 'Error: ' + result.error;
+                    status.style.color = '#ef4444';
+                }
+            } catch (err) {
+                status.textContent = 'Request failed. Check your connection.';
+                status.style.color = '#ef4444';
+            }
+
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            btn.textContent = '';
+            var icon = document.createElement('span');
+            icon.textContent = '\u26A1';
+            btn.appendChild(icon);
+            btn.appendChild(document.createTextNode(' Generate Now'));
+        });
+
+        window.addEventListener('DOMContentLoaded', loadBatches);
+    </script>
+</body>
+</html>
