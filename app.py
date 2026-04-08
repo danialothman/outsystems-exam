@@ -97,6 +97,26 @@ def verify_questions_with_ai(questions):
 
 BATCHES = load_all_batches()
 
+UPLOAD_RATE_PER_IP = 5      # max uploads per IP per hour
+UPLOAD_RATE_GLOBAL = 20     # max uploads across all IPs per hour
+_upload_log = []            # list of (timestamp, ip) tuples
+
+def _check_upload_rate(ip):
+    """Returns (allowed: bool, reason: str). Prunes entries older than 1 hour."""
+    from datetime import timezone
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=1)
+    global _upload_log
+    _upload_log = [(t, i) for t, i in _upload_log if t > cutoff]
+    global_count = len(_upload_log)
+    ip_count = sum(1 for _, i in _upload_log if i == ip)
+    if global_count >= UPLOAD_RATE_GLOBAL:
+        return False, f'Global upload limit reached ({UPLOAD_RATE_GLOBAL}/hour). Try again later.'
+    if ip_count >= UPLOAD_RATE_PER_IP:
+        return False, f'Upload limit reached ({UPLOAD_RATE_PER_IP}/hour). Try again later.'
+    _upload_log.append((now, ip))
+    return True, ''
+
 
 def get_session_questions():
     """Get ordered question objects from session's selected batch."""
@@ -347,6 +367,11 @@ def generate_batch():
 @app.route('/api/upload-batch', methods=['POST'])
 def upload_batch():
     """Upload a new question batch JSON file."""
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+    allowed, rate_reason = _check_upload_rate(ip)
+    if not allowed:
+        return jsonify({'error': rate_reason}), 429
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
 
