@@ -620,7 +620,8 @@
             }
 
             batches.forEach(function(b) {
-                const opt = addOption(select, b.key, b.name + ' (' + b.count + ' questions)');
+                const label = '[' + b.source + '] ' + b.name + ' (' + b.count + ' questions)';
+                const opt = addOption(select, b.key, label);
                 opt.dataset.timeLimit = b.time_limit;
                 opt.dataset.passingScore = b.passing_score;
                 opt.dataset.count = b.count;

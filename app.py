@@ -154,14 +154,25 @@ def landing():
 @app.route('/api/batches')
 def list_batches():
     """Return available question batches."""
+    from storage import QUESTIONS_DIR
+    import glob as glob_mod
+    local_files = {os.path.basename(f) for f in glob_mod.glob(os.path.join(QUESTIONS_DIR, '*.json'))}
+
     result = []
     for key, batch in BATCHES.items():
+        if key in local_files:
+            source = 'Built-in'
+        elif key.startswith('generated_'):
+            source = 'AI Generated'
+        else:
+            source = 'Uploaded'
         result.append({
             'key': key,
             'name': batch['name'],
             'count': batch['count'],
             'time_limit': batch['time_limit'],
-            'passing_score': batch['passing_score']
+            'passing_score': batch['passing_score'],
+            'source': source,
         })
     return jsonify(result)
 
