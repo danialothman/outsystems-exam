@@ -23,6 +23,19 @@ MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
 OPENROUTER_MODEL = os.environ.get('OPENROUTER_MODEL', 'google/gemma-4-31b-it:free')
+GENERATE_API_KEY = os.environ.get('GENERATE_API_KEY', '')
+
+def _check_admin_key():
+    """Return (allowed, error_response) based on X-Admin-Key header."""
+    if not GENERATE_API_KEY:
+        return False, (jsonify({'error': 'GENERATE_API_KEY is not configured on the server.'}), 503)
+    provided = request.headers.get('X-Admin-Key', '')
+    if not provided:
+        return False, (jsonify({'error': 'Missing X-Admin-Key header.'}), 401)
+    import hmac as _hmac
+    if not _hmac.compare_digest(provided, GENERATE_API_KEY):
+        return False, (jsonify({'error': 'Invalid admin key.'}), 403)
+    return True, None
 
 def sanitize_str(value):
     """Escape HTML entities to prevent XSS."""
@@ -249,6 +262,10 @@ OUTSYSTEMS_KEYWORDS = [
 @app.route('/api/generate-batch', methods=['POST'])
 def generate_batch():
     """Generate a question batch using OpenRouter API."""
+    allowed, err = _check_admin_key()
+    if not allowed:
+        return err
+
     if not OPENROUTER_API_KEY:
         return jsonify({'error': 'OpenRouter API key not configured. Set OPENROUTER_API_KEY environment variable.'}), 400
 
@@ -454,6 +471,10 @@ def generate_batch():
 @app.route('/api/upload-batch', methods=['POST'])
 def upload_batch():
     """Upload a new question batch JSON file."""
+    allowed, err = _check_admin_key()
+    if not allowed:
+        return err
+
     ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
     allowed, rate_reason = _check_upload_rate(ip)
     if not allowed:
