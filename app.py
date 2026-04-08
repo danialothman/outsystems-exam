@@ -101,6 +101,22 @@ UPLOAD_RATE_PER_IP = 5      # max uploads per IP per hour
 UPLOAD_RATE_GLOBAL = 20     # max uploads across all IPs per hour
 _upload_log = []            # list of (timestamp, ip) tuples
 
+PAID_GEN_LIMIT_PER_IP = 1   # max paid generations per IP per 24 hours
+_paid_gen_log = []          # list of (timestamp, ip) tuples
+
+def _check_paid_gen_rate(ip):
+    """Returns (allowed: bool, reason: str). 1 paid generation per IP per 24 hours."""
+    from datetime import timezone
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=24)
+    global _paid_gen_log
+    _paid_gen_log = [(t, i) for t, i in _paid_gen_log if t > cutoff]
+    ip_count = sum(1 for _, i in _paid_gen_log if i == ip)
+    if ip_count >= PAID_GEN_LIMIT_PER_IP:
+        return False, 'Paid generation limit reached (1 per IP per 24 hours). Use the free model or try again tomorrow.'
+    _paid_gen_log.append((now, ip))
+    return True, ''
+
 def _check_upload_rate(ip):
     """Returns (allowed: bool, reason: str). Prunes entries older than 1 hour."""
     from datetime import timezone
@@ -178,15 +194,9 @@ def generate_batch():
         if remaining > 0:
             return jsonify({'error': f'Please wait {remaining} seconds before generating again.', 'cooldown': remaining}), 429
 
-    ALLOWED_FREE_MODELS = {
-        'google/gemma-4-31b-it:free',
-        'google/gemma-4-26b-a4b-it:free',
-        'nvidia/nemotron-3-super-120b-a12b:free',
-        'nvidia/nemotron-3-nano-30b-a3b:free',
-        'minimax/minimax-m2.5:free',
-        'stepfun/step-3.5-flash:free',
-        'arcee-ai/trinity-large-preview:free',
-    }
+    MODEL_FREE = 'google/gemma-4-31b-it:free'
+    MODEL_PAID = 'google/gemma-4-31b-it'
+    ALLOWED_MODELS = {MODEL_FREE, MODEL_PAID}
 
     data = request.get_json()
     topic_key = str(data.get('topic_key', '')).strip()
@@ -194,9 +204,15 @@ def generate_batch():
         return jsonify({'error': 'Invalid topic. Please select a preset topic.'}), 400
     topic = ALLOWED_TOPICS[topic_key]
 
-    model = data.get('model', OPENROUTER_MODEL)
-    if model not in ALLOWED_FREE_MODELS:
-        model = OPENROUTER_MODEL
+    model = data.get('model', MODEL_FREE)
+    if model not in ALLOWED_MODELS:
+        model = MODEL_FREE
+
+    if model == MODEL_PAID:
+        ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+        allowed, rate_reason = _check_paid_gen_rate(ip)
+        if not allowed:
+            return jsonify({'error': rate_reason}), 429
 
     schema_example = json.dumps({
         "name": "Your Batch Name",
