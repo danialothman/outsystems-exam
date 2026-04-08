@@ -62,7 +62,7 @@ def verify_questions_with_ai(questions):
     )
 
     payload = json.dumps({
-        "model": OPENROUTER_MODEL,
+        "model": "anthropic/claude-3-5-haiku",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.0,
         "max_tokens": 200,
@@ -87,6 +87,10 @@ def verify_questions_with_ai(questions):
             content = fence_match.group(1)
         verdict = json.loads(content)
         return bool(verdict.get('ok', True)), str(verdict.get('reason', ''))
+    except urllib.error.HTTPError as e:
+        if e.code == 429:
+            return False, 'Content check rate limit reached. Please try again later.'
+        return True, ''
     except Exception:
         return True, ''
 
