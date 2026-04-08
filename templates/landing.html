@@ -412,6 +412,11 @@
             border-color: #4f46e5;
             background: #f0f4ff;
         }
+        .upload-drop-zone.drag-over {
+            border-color: #4f46e5;
+            background: #e0e7ff;
+            transform: scale(1.01);
+        }
         .upload-drop-zone .drop-icon {
             font-size: 20px;
         }
@@ -655,9 +660,13 @@
             }
         });
 
-        document.getElementById('batchFile').addEventListener('change', async function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        async function uploadFile(file) {
+            if (!file || !file.name.endsWith('.json')) {
+                const status = document.getElementById('uploadStatus');
+                status.textContent = 'Error: File must be a .json file';
+                status.style.color = '#ef4444';
+                return;
+            }
             const status = document.getElementById('uploadStatus');
             status.textContent = 'Uploading...';
             status.style.color = '#6b7280';
@@ -681,6 +690,40 @@
                 status.textContent = 'Upload failed';
                 status.style.color = '#ef4444';
             }
+        }
+
+        const dropZone = document.querySelector('.upload-drop-zone');
+
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', function(e) {
+            e.stopPropagation();
+            if (!dropZone.contains(e.relatedTarget)) {
+                dropZone.classList.remove('drag-over');
+            }
+        });
+
+        dropZone.addEventListener('drop', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            await uploadFile(file);
+        });
+
+        document.getElementById('batchFile').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            await uploadFile(file);
             e.target.value = '';
         });
 
