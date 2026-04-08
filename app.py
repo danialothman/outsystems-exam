@@ -20,7 +20,7 @@ QUESTIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'questi
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
-OPENROUTER_MODEL = os.environ.get('OPENROUTER_MODEL', 'google/gemma-3-27b-it:free')
+OPENROUTER_MODEL = os.environ.get('OPENROUTER_MODEL', 'google/gemma-4-31b-it:free')
 
 def sanitize_str(value):
     """Escape HTML entities to prevent XSS."""
@@ -81,16 +81,57 @@ def list_batches():
         })
     return jsonify(result)
 
+GENERATE_COOLDOWN = 120  # seconds between generations
+
+ALLOWED_TOPICS = {
+    'odc-associate': 'OutSystems ODC Associate Developer certification',
+    'architecture': 'OutSystems Architecture Specialist certification',
+    'web-developer': 'OutSystems Web Developer Specialist certification',
+    'security': 'OutSystems Security Specialist certification',
+    'mobile-developer': 'OutSystems Mobile Developer Specialist certification',
+    'agentic-ai': 'OutSystems Agentic AI certification',
+}
+
+OUTSYSTEMS_KEYWORDS = [
+    'outsystems', 'odc', 'entity', 'aggregate', 'screen', 'block', 'module',
+    'action', 'widget', 'attribute', 'forge', 'service studio', 'integration',
+    'reactive', 'traditional web', 'client action', 'server action', 'rest api',
+    'timer', 'role', 'scaffold', 'lifecycle', 'fetch', 'input parameter',
+    'output parameter', 'local variable', 'site property', 'static entity',
+]
+
 @app.route('/api/generate-batch', methods=['POST'])
 def generate_batch():
     """Generate a question batch using OpenRouter API."""
     if not OPENROUTER_API_KEY:
         return jsonify({'error': 'OpenRouter API key not configured. Set OPENROUTER_API_KEY environment variable.'}), 400
 
+    last_gen = session.get('last_generate')
+    if last_gen:
+        elapsed = (datetime.now() - datetime.fromisoformat(last_gen)).total_seconds()
+        remaining = int(GENERATE_COOLDOWN - elapsed)
+        if remaining > 0:
+            return jsonify({'error': f'Please wait {remaining} seconds before generating again.', 'cooldown': remaining}), 429
+
+    ALLOWED_FREE_MODELS = {
+        'google/gemma-4-31b-it:free',
+        'google/gemma-4-26b-a4b-it:free',
+        'nvidia/nemotron-3-super-120b-a12b:free',
+        'nvidia/nemotron-3-nano-30b-a3b:free',
+        'minimax/minimax-m2.5:free',
+        'stepfun/step-3.5-flash:free',
+        'arcee-ai/trinity-large-preview:free',
+    }
+
     data = request.get_json()
-    topic = sanitize_str(str(data.get('topic', '')).strip())
-    if not topic or len(topic) > 200:
-        return jsonify({'error': 'Please provide a valid topic (max 200 characters).'}), 400
+    topic_key = str(data.get('topic_key', '')).strip()
+    if topic_key not in ALLOWED_TOPICS:
+        return jsonify({'error': 'Invalid topic. Please select a preset topic.'}), 400
+    topic = ALLOWED_TOPICS[topic_key]
+
+    model = data.get('model', OPENROUTER_MODEL)
+    if model not in ALLOWED_FREE_MODELS:
+        model = OPENROUTER_MODEL
 
     schema_example = json.dumps({
         "name": "Your Batch Name",
@@ -123,7 +164,7 @@ def generate_batch():
     )
 
     payload = json.dumps({
-        "model": OPENROUTER_MODEL,
+        "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
         "max_tokens": 16000,
@@ -194,8 +235,32 @@ def generate_batch():
             'explanation': sanitize_str(str(q.get('explanation', '')))
         })
 
-    if len(sanitized_questions) == 0:
+    total_raw = len(batch_data.get('questions', []))
+    valid_count = len(sanitized_questions)
+
+    if valid_count == 0:
         return jsonify({'error': 'AI output had no valid questions after validation. Try again.'}), 422
+
+    if valid_count < 5:
+        return jsonify({'error': f'Only {valid_count} valid questions out of {total_raw}. Too few to be useful — try again.'}), 422
+
+    partial = valid_count < total_raw
+
+    # Keyword verification: check questions are OutSystems-related
+    outsystems_match_count = 0
+    for q in sanitized_questions:
+        text = ' '.join([
+            q['question'],
+            ' '.join(q['options']),
+            q.get('explanation', ''),
+            q.get('category', ''),
+            q.get('subcategory', ''),
+        ]).lower()
+        if any(kw in text for kw in OUTSYSTEMS_KEYWORDS):
+            outsystems_match_count += 1
+    match_ratio = outsystems_match_count / valid_count if valid_count else 0
+    if match_ratio < 0.3:
+        return jsonify({'error': 'Generated content doesn\'t appear to be OutSystems-related. Try again with a different model.'}), 422
 
     # Build clean batch
     name = sanitize_str(str(batch_data.get('name', topic)))
@@ -208,7 +273,8 @@ def generate_batch():
 
     # Save to disk
     safe_topic = re.sub(r'[^a-zA-Z0-9_-]', '_', topic.lower())[:40]
-    filename = f'generated_{safe_topic}.json'
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'generated_{safe_topic}_{timestamp}.json'
     filepath = os.path.join(QUESTIONS_DIR, filename)
     with open(filepath, 'w') as f:
         json.dump(sanitized_data, f, indent=2)
@@ -221,12 +287,18 @@ def generate_batch():
         'count': len(sanitized_data['questions'])
     }
 
-    return jsonify({
+    session['last_generate'] = datetime.now().isoformat()
+
+    resp = {
         'success': True,
         'key': filename,
         'name': sanitized_data['name'],
-        'count': len(sanitized_data['questions'])
-    })
+        'count': valid_count,
+        'cooldown': GENERATE_COOLDOWN
+    }
+    if partial:
+        resp['warning'] = f'{valid_count} of {total_raw} questions were valid. {total_raw - valid_count} were malformed and skipped.'
+    return jsonify(resp)
 
 
 @app.route('/api/upload-batch', methods=['POST'])

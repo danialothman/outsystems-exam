@@ -310,6 +310,26 @@
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
         }
 
+        .model-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1.5px solid #e0e7ff;
+            border-radius: 8px;
+            background: #f9fafb;
+            color: #1a202c;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+        .model-select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
         .btn-generate-ai {
             display: flex;
             align-items: center;
@@ -498,13 +518,13 @@
                     <div class="step-title">Pick a certification topic</div>
                 </div>
                 <div class="topic-cards" id="topicCards">
-                    <div class="topic-card selected" data-topic="OutSystems ODC Associate Developer certification">ODC Associate Developer</div>
-                    <div class="topic-card" data-topic="OutSystems Architecture Specialist certification">Architecture Specialist</div>
-                    <div class="topic-card" data-topic="OutSystems Web Developer Specialist certification">Web Developer Specialist</div>
-                    <div class="topic-card" data-topic="OutSystems Security Specialist certification">Security Specialist</div>
-                    <div class="topic-card" data-topic="OutSystems Mobile Developer Specialist certification">Mobile Developer Specialist</div>
-                    <div class="topic-card" data-topic="OutSystems Agentic AI certification">Agentic AI Certification</div>
-                    <div class="topic-card" data-topic="custom">Custom</div>
+                    <div class="topic-card selected" data-topic="OutSystems ODC Associate Developer certification" data-topic-key="odc-associate">ODC Associate Developer</div>
+                    <div class="topic-card" data-topic="OutSystems Architecture Specialist certification" data-topic-key="architecture">Architecture Specialist</div>
+                    <div class="topic-card" data-topic="OutSystems Web Developer Specialist certification" data-topic-key="web-developer">Web Developer Specialist</div>
+                    <div class="topic-card" data-topic="OutSystems Security Specialist certification" data-topic-key="security">Security Specialist</div>
+                    <div class="topic-card" data-topic="OutSystems Mobile Developer Specialist certification" data-topic-key="mobile-developer">Mobile Developer Specialist</div>
+                    <div class="topic-card" data-topic="OutSystems Agentic AI certification" data-topic-key="agentic-ai">Agentic AI Certification</div>
+                    <div class="topic-card" data-topic="custom">Custom (manual prompt only)</div>
                 </div>
                 <input type="text" class="custom-topic-input" id="customTopicInput" placeholder="Enter your exam topic...">
             </div>
@@ -513,6 +533,18 @@
                 <div class="wizard-step-header">
                     <div class="step-number">2</div>
                     <div class="step-title">Generate questions</div>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; color: #9ca3af; display: block; margin-bottom: 4px;">AI Model (free tier)</label>
+                    <select class="model-select" id="modelSelect">
+                        <option value="google/gemma-4-31b-it:free">Gemma 4 31B</option>
+                        <option value="google/gemma-4-26b-a4b-it:free">Gemma 4 26B</option>
+                        <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 3 Super 120B</option>
+                        <option value="nvidia/nemotron-3-nano-30b-a3b:free">Nemotron 3 Nano 30B</option>
+                        <option value="minimax/minimax-m2.5:free">MiniMax M2.5</option>
+                        <option value="stepfun/step-3.5-flash:free">Step 3.5 Flash</option>
+                        <option value="arcee-ai/trinity-large-preview:free">Trinity Large</option>
+                    </select>
                 </div>
                 <button class="btn-generate-ai" id="generateAiBtn">
                     <span>&#x26A1;</span> Generate Now
@@ -674,6 +706,7 @@
             '}';
 
         var selectedTopic = 'OutSystems ODC Associate Developer certification';
+        var selectedTopicKey = 'odc-associate';
 
         function getAiPrompt() {
             var topic = selectedTopic;
@@ -704,6 +737,7 @@
             card.classList.add('selected');
 
             selectedTopic = card.dataset.topic;
+            selectedTopicKey = card.dataset.topicKey || null;
             var customInput = document.getElementById('customTopicInput');
             if (selectedTopic === 'custom') {
                 customInput.classList.add('show');
@@ -749,18 +783,42 @@
             }
         });
 
+        // Cooldown timer
+        function startCooldown(seconds) {
+            var btn = document.getElementById('generateAiBtn');
+            btn.disabled = true;
+            btn.dataset.onCooldown = 'true';
+            var remaining = seconds;
+
+            function tick() {
+                if (remaining <= 0) {
+                    btn.disabled = false;
+                    delete btn.dataset.onCooldown;
+                    btn.textContent = '';
+                    var icon = document.createElement('span');
+                    icon.textContent = '\u26A1';
+                    btn.appendChild(icon);
+                    btn.appendChild(document.createTextNode(' Generate Now'));
+                    return;
+                }
+                var mins = Math.floor(remaining / 60);
+                var secs = remaining % 60;
+                var timeStr = mins > 0 ? mins + 'm ' + secs + 's' : secs + 's';
+                btn.textContent = 'Generate again in ' + timeStr;
+                remaining--;
+                setTimeout(tick, 1000);
+            }
+            tick();
+        }
+
         // Generate on site via OpenRouter
         document.getElementById('generateAiBtn').addEventListener('click', async function() {
             var btn = this;
             var status = document.getElementById('generateStatus');
-            var topic = selectedTopic;
-            if (topic === 'custom') {
-                topic = document.getElementById('customTopicInput').value.trim();
-                if (!topic) {
-                    status.textContent = 'Please enter a custom topic first.';
-                    status.style.color = '#ef4444';
-                    return;
-                }
+            if (!selectedTopicKey) {
+                status.textContent = 'Custom topics can only use the manual copy-prompt method below.';
+                status.style.color = '#d97706';
+                return;
             }
 
             btn.classList.add('loading');
@@ -778,13 +836,19 @@
                 var res = await fetch('/api/generate-batch', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ topic: topic })
+                    body: JSON.stringify({ topic_key: selectedTopicKey, model: document.getElementById('modelSelect').value })
                 });
                 var result = await res.json();
 
                 if (result.success) {
-                    status.textContent = 'Generated "' + result.name + '" with ' + result.count + ' questions!';
-                    status.style.color = '#10b981';
+                    var msg = 'Generated "' + result.name + '" with ' + result.count + ' questions!';
+                    if (result.warning) {
+                        msg += ' (' + result.warning + ')';
+                        status.style.color = '#d97706';
+                    } else {
+                        status.style.color = '#10b981';
+                    }
+                    status.textContent = msg;
                     await loadBatches();
                     // Auto-select the new batch
                     var sel = document.getElementById('batchSelect');
@@ -795,7 +859,11 @@
                             break;
                         }
                     }
+                    startCooldown(result.cooldown || 120);
                 } else {
+                    if (result.cooldown) {
+                        startCooldown(result.cooldown);
+                    }
                     status.textContent = 'Error: ' + result.error;
                     status.style.color = '#ef4444';
                 }
@@ -805,7 +873,9 @@
             }
 
             btn.classList.remove('loading');
-            btn.disabled = false;
+            if (!btn.dataset.onCooldown) {
+                btn.disabled = false;
+            }
             btn.textContent = '';
             var icon = document.createElement('span');
             icon.textContent = '\u26A1';
