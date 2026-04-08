@@ -511,14 +511,14 @@
 
         <a href="#" class="btn-start disabled" id="startBtn">Start Exam</a>
 
-        <div class="generate-divider" style="display:none">or</div>
+        <div class="generate-divider">or</div>
 
-        <button class="btn-generate" id="generateToggle" style="display:none">
+        <button class="btn-generate" id="generateToggle">
             <span class="gen-icon">&#x2728;</span>
             Generate Your Own Questions
         </button>
 
-        <div class="wizard-panel" id="wizardPanel" style="display:none">
+        <div class="wizard-panel" id="wizardPanel">
             <div class="wizard-step">
                 <div class="wizard-step-header">
                     <div class="step-number">1</div>
@@ -541,20 +541,21 @@
                     <div class="step-number">2</div>
                     <div class="step-title">Generate questions</div>
                 </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="font-size: 11px; color: #9ca3af; display: block; margin-bottom: 4px;">AI Model</label>
-                    <select class="model-select" id="modelSelect">
-                        <option value="google/gemma-4-31b-it:free">Gemma 4 31B — Free</option>
-                        <option value="google/gemma-4-31b-it">Gemma 4 31B — Paid (1 per IP/day)</option>
-                        <option value="anthropic/claude-3-5-haiku">Claude 3.5 Haiku — Paid (1 per IP/day)</option>
-                    </select>
+                <div style="display:none">
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 11px; color: #9ca3af; display: block; margin-bottom: 4px;">AI Model</label>
+                        <select class="model-select" id="modelSelect">
+                            <option value="google/gemma-4-31b-it:free">Gemma 4 31B — Free</option>
+                            <option value="google/gemma-4-31b-it">Gemma 4 31B — Paid (1 per IP/day)</option>
+                            <option value="anthropic/claude-3-5-haiku">Claude 3.5 Haiku — Paid (1 per IP/day)</option>
+                        </select>
+                    </div>
+                    <button class="btn-generate-ai" id="generateAiBtn">
+                        <span>&#x26A1;</span> Generate Now
+                    </button>
+                    <p class="step-hint" id="generateStatus">Uses a free AI model via OpenRouter to generate 50 questions instantly.</p>
+                    <div class="method-divider"><span>or generate manually</span></div>
                 </div>
-                <button class="btn-generate-ai" id="generateAiBtn">
-                    <span>&#x26A1;</span> Generate Now
-                </button>
-                <p class="step-hint" id="generateStatus">Uses a free AI model via OpenRouter to generate 50 questions instantly.</p>
-
-                <div class="method-divider"><span>or generate manually</span></div>
 
                 <button class="btn-copy-prompt" id="copySchemaBtn">
                     <span>&#x1F4CB;</span> Copy AI Prompt to Clipboard
