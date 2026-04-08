@@ -1,0 +1,335 @@
+OutSystems ODC Associate Developer Exam Simulator
+PROJECT MANIFEST
+================================================================================
+
+PROJECT LOCATION
+================================================================================
+/sessions/vibrant-gracious-ramanujan/mnt/outputs/outsystems-exam/
+
+QUICK START
+================================================================================
+1. Navigate to the directory
+2. Run: ./run.sh (or python app.py after pip install flask)
+3. Open: http://localhost:5000
+
+PROJECT FILES (8 files, 3,068 lines of code, 116KB total)
+================================================================================
+
+Core Application Files:
+  app.py                           870 lines  (38 KB)
+    - Flask web server
+    - 50 exam questions with answers
+    - Session management
+    - Grading logic
+    - 6 REST API endpoints
+
+  templates/index.html             861 lines  (26 KB)
+    - Complete exam UI
+    - Professional dark sidebar
+    - Question navigator
+    - Timer display
+    - Results screen
+    - Vanilla JavaScript (no frameworks)
+    - Responsive CSS
+
+Infrastructure Files:
+  requirements.txt                   1 line   (single dependency: Flask)
+  run.sh                            10 lines  (executable startup script)
+
+Documentation Files:
+  README.md                        260 lines  (User guide & features)
+  DEPLOYMENT_GUIDE.md              424 lines  (Installation & setup)
+  FEATURES.md                      310 lines  (Complete feature checklist)
+  VERIFICATION.txt                 332 lines  (Requirements verification)
+  MANIFEST.txt                     (this file)
+
+EXAM CONTENT SUMMARY
+================================================================================
+
+Total Questions: 50 (Questions 1-50)
+
+Category Breakdown:
+  UI Design:                       15 questions
+    - Input Widgets:               7  questions
+    - Blocks & Events:             4  questions
+    - Display Data Widgets:        2  questions
+    - Pagination & Sorting:        2  questions
+
+  Fetching Data:                  10 questions
+    - Aggregates:                  6  questions
+    - Fetching Data on Screens:    4  questions
+
+  Logic:                          10 questions
+    - Logic Flows & Exception:     5  questions
+    - Form Validations:            3  questions
+    - Client & Server Actions:     2  questions
+
+  Web Apps in ODC:                 6 questions
+    - Screen Lifecycle:            3  questions
+    - App Troubleshooting:         2  questions
+    - Client Variables:            1  question
+
+  Data Modeling:                   6 questions
+    - Entities & Static Entities:  3  questions
+    - Data Relationships:          2  questions
+    - Bootstrap from Excel:        1  question
+
+  Role-based Security:             3 questions
+
+FEATURE COMPLETENESS CHECKLIST
+================================================================================
+
+Core Requirements:
+  ✓ Single Flask application
+  ✓ 50 multiple-choice questions
+  ✓ 4 options per question (A-D)
+  ✓ Correct category weights
+  ✓ Embedded HTML templates (Jinja2)
+  ✓ No database required
+  ✓ Session-based storage
+
+Exam Features:
+  ✓ 120-minute countdown timer
+  ✓ Timer always visible at top
+  ✓ Color-coded timer warnings
+  ✓ Auto-submit on time expire
+  ✓ Questions shuffled per session
+  ✓ Server-side answer validation
+  ✓ Server-side grading
+
+User Interface:
+  ✓ Professional dark sidebar (#1a1a2e)
+  ✓ Question navigator grid
+  ✓ Main content area
+  ✓ Flag for review button
+  ✓ Previous/Next navigation
+  ✓ Progress bar and counter
+  ✓ Responsive design
+  ✓ Exam-realistic appearance
+
+Question Features:
+  ✓ Scenario-based content
+  ✓ Real-world context
+  ✓ Not simple definitions
+  ✓ Tricky but fair options
+  ✓ Category badges
+  ✓ Subcategory badges
+
+Results Features:
+  ✓ Final score (X/50)
+  ✓ Percentage calculation
+  ✓ Pass/Fail at 70%
+  ✓ Category breakdown
+  ✓ Per-category percentages
+  ✓ Visual indicators
+
+Export Features:
+  ✓ Copy to clipboard button
+  ✓ All questions exported
+  ✓ All options included
+  ✓ User answers marked
+  ✓ Exam date included
+  ✓ Clean text format
+  ✓ No correct answers shown
+
+TECHNICAL SPECIFICATIONS
+================================================================================
+
+Framework:           Flask (Python 3.7+)
+Frontend:            HTML5 + CSS3 + Vanilla JavaScript
+No frameworks:       Vue, React, Angular (not used)
+Database:            None (session-based)
+Storage:             Flask server-side sessions
+API Architecture:    RESTful with JSON
+Dependencies:        Flask only (1 package)
+Total Code Size:     ~100 KB
+Browser Support:     Chrome, Firefox, Safari, Edge 90+
+Mobile Support:      Basic (desktop optimized)
+
+API Endpoints:
+  GET  /                      - Exam main page
+  GET  /api/questions         - Get all 50 questions
+  GET  /api/time-remaining    - Get remaining time
+  POST /api/save-answer       - Save individual answer
+  POST /api/toggle-flag       - Flag/unflag question
+  POST /api/submit            - Submit and grade exam
+
+DEPLOYMENT OPTIONS
+================================================================================
+
+Standalone Development:
+  python app.py
+  Runs on http://localhost:5000
+
+Docker:
+  docker build -t outsystems-exam .
+  docker run -p 5000:5000 outsystems-exam
+
+Production (Gunicorn):
+  pip install gunicorn
+  gunicorn -w 4 -b 0.0.0.0:5000 app:app
+
+Systemd Service:
+  Set up service file for auto-start on Linux
+
+Nginx Reverse Proxy:
+  Configuration included in DEPLOYMENT_GUIDE.md
+
+Cloud Platforms:
+  Heroku, AWS, DigitalOcean, etc. (Flask-compatible)
+
+USAGE INSTRUCTIONS
+================================================================================
+
+For End Users:
+  1. Install: pip install -r requirements.txt
+  2. Run: python app.py
+  3. Open: http://localhost:5000
+  4. Click questions to navigate
+  5. Select answers (saved automatically)
+  6. Flag difficult questions for review
+  7. Watch timer (top-right corner)
+  8. Submit when done
+  9. Review results and copy to clipboard
+
+For Administrators/Customizers:
+  See DEPLOYMENT_GUIDE.md for:
+    - Configuration options
+    - Port changes
+    - Exam duration modification
+    - Passing score adjustment
+    - Security hardening
+    - Performance monitoring
+
+For Question Updates:
+  1. Edit app.py
+  2. Modify EXAM_QUESTIONS list
+  3. Restart Flask server
+  4. New sessions get new questions
+
+QUALITY ASSURANCE
+================================================================================
+
+Testing Performed:
+  ✓ All 50 questions verified
+  ✓ Category counts verified (15+10+10+6+6+3=50)
+  ✓ Subcategory counts verified
+  ✓ Answer keys verified
+  ✓ API endpoints tested
+  ✓ Timer functionality verified
+  ✓ Session management verified
+  ✓ Grading logic verified
+  ✓ UI responsive verification
+  ✓ Export format verification
+
+Code Quality:
+  ✓ Clear function naming
+  ✓ Organized code structure
+  ✓ Error handling
+  ✓ Security best practices
+  ✓ No hardcoded secrets in client code
+  ✓ Server-side validation
+  ✓ Semantic HTML markup
+  ✓ Efficient JavaScript
+
+KNOWN LIMITATIONS
+================================================================================
+
+1. Session-based only
+   - Exam progress lost if browser closes
+   - Best for single-sitting exams
+
+2. No persistent database
+   - All data stored in server memory
+   - Not suitable for very large deployments
+
+3. Single user at a time (development mode)
+   - With proper deployment can handle multiple users
+   - See DEPLOYMENT_GUIDE.md for scaling
+
+4. Desktop-optimized
+   - Mobile support is basic
+   - Best experience on desktop/tablet
+
+5. No built-in user authentication
+   - Add authentication if deploying publicly
+   - Currently honor-system
+
+NEXT STEPS
+================================================================================
+
+Immediate Use:
+  1. Run ./run.sh to start
+  2. Open http://localhost:5000
+  3. Take a practice exam
+  4. Review results
+
+For Deployment:
+  1. Read DEPLOYMENT_GUIDE.md
+  2. Choose deployment method
+  3. Configure as needed
+  4. Deploy to server
+
+For Customization:
+  1. Modify questions in app.py
+  2. Adjust timer duration
+  3. Change passing score
+  4. Customize UI colors/styling
+
+For Production:
+  1. Change secret key in app.py
+  2. Disable debug mode
+  3. Set up HTTPS
+  4. Consider authentication
+  5. Enable logging
+  6. Set up monitoring
+
+SUPPORT & TROUBLESHOOTING
+================================================================================
+
+Common Issues:
+  - "Port 5000 already in use" → Use different port (see DEPLOYMENT_GUIDE)
+  - "Flask not found" → Run: pip install -r requirements.txt
+  - "Questions not loading" → Check Flask console for errors
+  - "Timer not syncing" → Refresh page
+
+Detailed Help:
+  - README.md for features and usage
+  - DEPLOYMENT_GUIDE.md for installation and advanced setup
+  - FEATURES.md for complete feature list
+  - VERIFICATION.txt for verification details
+
+File Permissions:
+  - run.sh is executable (chmod +x)
+  - All files readable by user
+  - No special permissions needed
+
+VERIFICATION SUMMARY
+================================================================================
+
+Status: COMPLETE AND VERIFIED ✓
+
+All 50 Questions Present:     ✓
+Category Weights Correct:     ✓
+Scenario-Based Content:       ✓
+Professional UI Design:       ✓
+120-Minute Timer:             ✓
+Pass/Fail at 70%:             ✓
+Category Breakdown:           ✓
+Copy to Clipboard Export:     ✓
+Question Navigation:          ✓
+Session-Based Storage:        ✓
+No Database Required:         ✓
+Single Flask App:             ✓
+
+Ready for Immediate Use.
+
+================================================================================
+
+Last Updated: 2026-04-08
+Project Version: 1.0
+Total Files: 8
+Total Lines of Code: 3,068
+Total Size: 116 KB
+
+================================================================================

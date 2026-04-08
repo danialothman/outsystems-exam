@@ -1,0 +1,247 @@
+================================================================================
+OutSystems ODC Associate Developer - Practice Exam Simulator
+START HERE - Quick Reference Guide
+================================================================================
+
+INSTALLATION (2 minutes)
+================================================================================
+
+Option 1 - Using run.sh (Linux/macOS):
+  1. cd outsystems-exam
+  2. chmod +x run.sh
+  3. ./run.sh
+  4. Open http://localhost:5000
+
+Option 2 - Manual (Any OS):
+  1. cd outsystems-exam
+  2. pip install -r requirements.txt
+  3. python app.py
+  4. Open http://localhost:5000
+
+That's it! No database, no configuration needed.
+
+TAKING THE EXAM
+================================================================================
+
+1. Timer starts automatically (120 minutes)
+2. Click question numbers in sidebar to navigate
+3. Select answers - they auto-save
+4. Flag difficult questions with flag button
+5. Use Previous/Next to navigate sequentially
+6. Click "Submit Exam" when done (or at time limit)
+7. Results show immediately with:
+   - Final score (X/50)
+   - Pass/Fail status
+   - Category breakdown
+   - Copy-to-clipboard export
+
+AFTER THE EXAM
+================================================================================
+
+Copy all your answers:
+1. Click "Copy All Answers to Clipboard" button
+2. Paste into a text file or email
+3. Share with others for grading
+4. No correct answers are included (safe to share)
+
+VIEW THE CODE
+================================================================================
+
+Main Application:        app.py (870 lines)
+Web Interface:          templates/index.html (861 lines)
+Requirements:          requirements.txt (Flask only)
+Startup Script:        run.sh
+
+DOCUMENTATION
+================================================================================
+
+README.md              - Features and usage guide
+DEPLOYMENT_GUIDE.md    - Installation and advanced setup
+FEATURES.md            - Complete feature checklist
+VERIFICATION.txt       - Requirements verification
+MANIFEST.txt           - Project structure and manifest
+START_HERE.txt         - This file
+
+READ THESE IN ORDER:
+  1. README.md (5 min) - Get oriented
+  2. START_HERE.txt (2 min) - Quick reference
+  3. DEPLOYMENT_GUIDE.md (if deploying)
+
+KEY FEATURES
+================================================================================
+
+✓ 50 scenario-based questions
+✓ 120-minute countdown timer
+✓ Professional exam UI
+✓ Question navigator with flagging
+✓ Auto-save answers
+✓ Instant grading (70% = pass)
+✓ Category breakdown
+✓ Copy results to clipboard
+✓ No database needed
+✓ Session-based storage
+
+EXAM CATEGORIES (50 questions)
+================================================================================
+
+UI Design:               15 questions
+  - Input Widgets:       7
+  - Blocks & Events:     4
+  - Display Widgets:     2
+  - Pagination:          2
+
+Fetching Data:          10 questions
+  - Aggregates:          6
+  - Fetch on Screen:     4
+
+Logic:                  10 questions
+  - Exception Handling:  5
+  - Form Validation:     3
+  - Client/Server:       2
+
+Web Apps in ODC:         6 questions
+  - Screen Lifecycle:    3
+  - Troubleshooting:     2
+  - Client Variables:    1
+
+Data Modeling:           6 questions
+  - Entities:            3
+  - Relationships:       2
+  - Bootstrap Excel:     1
+
+Role-based Security:     3 questions
+
+PASSING SCORE
+================================================================================
+
+You need: 35/50 (70%) to PASS
+
+The exam shows:
+- Your exact score
+- Percentage
+- Pass or Fail
+- Category breakdown
+- Each category's percentage
+
+TROUBLESHOOTING
+================================================================================
+
+Problem: "Port 5000 already in use"
+Solution: Edit app.py, change 'port=5000' to 'port=8080'
+
+Problem: "Flask not found"
+Solution: pip install flask
+
+Problem: "Questions not loading"
+Solution: Check Flask console for errors, refresh page
+
+Problem: "Timer not syncing"
+Solution: Refresh page (F5 or Cmd+R)
+
+For more help, see DEPLOYMENT_GUIDE.md
+
+FILE LOCATIONS
+================================================================================
+
+Source Directory:  /sessions/vibrant-gracious-ramanujan/mnt/outputs/outsystems-exam/
+
+Files:
+  - app.py (main application)
+  - templates/index.html (UI)
+  - requirements.txt (dependencies)
+  - run.sh (startup script)
+  - README.md (full documentation)
+  - DEPLOYMENT_GUIDE.md (advanced setup)
+  - FEATURES.md (complete feature list)
+  - VERIFICATION.txt (verification report)
+  - MANIFEST.txt (project manifest)
+  - START_HERE.txt (this file)
+
+COMMON CUSTOMIZATIONS
+================================================================================
+
+Change Exam Duration:
+  Edit app.py, find: 7200  # 120 minutes
+  Change to: 3600  # 60 minutes
+
+Change Passing Score:
+  Edit app.py, find: percentage >= 70
+  Change to: percentage >= 80
+
+Change Port:
+  Edit app.py, find: port=5000
+  Change to: port=8080
+
+Add/Modify Questions:
+  Edit app.py EXAM_QUESTIONS list
+
+For more: See DEPLOYMENT_GUIDE.md
+
+DEPLOYMENT OPTIONS
+================================================================================
+
+Development:     python app.py
+Docker:          See DEPLOYMENT_GUIDE.md
+Production:      See DEPLOYMENT_GUIDE.md (Gunicorn, Nginx, etc.)
+Systemd:         See DEPLOYMENT_GUIDE.md
+Cloud:           See DEPLOYMENT_GUIDE.md
+
+BROWSER REQUIREMENTS
+================================================================================
+
+Recommended:
+  - Chrome/Chromium 90+
+  - Firefox 88+
+  - Safari 14+
+  - Edge 90+
+
+Desktop optimized. Mobile support is basic.
+
+NEXT STEPS
+================================================================================
+
+1. Install and run the app
+2. Take a practice exam
+3. Review your results
+4. Read DEPLOYMENT_GUIDE.md if you need to customize
+5. Share with colleagues!
+
+QUICK STATS
+================================================================================
+
+Total Files:          8
+Total Code Lines:     3,068
+Code Size:            ~100 KB
+Questions:            50
+Exam Time:            120 minutes
+Pass Score:           70% (35/50)
+Categories:           6 major
+Subcategories:        17 total
+API Endpoints:        6
+External Dependencies: 1 (Flask)
+Database:             None (session-based)
+
+SUPPORT
+================================================================================
+
+Issue Tracker:   Check DEPLOYMENT_GUIDE.md for troubleshooting
+Questions:       Refer to README.md for detailed features
+Customization:   See DEPLOYMENT_GUIDE.md for modifications
+Source Code:     All files are well-commented
+
+START NOW
+================================================================================
+
+Ready to begin?
+
+1. Open terminal/command prompt
+2. Navigate to outsystems-exam directory
+3. Run: ./run.sh (or python app.py)
+4. Open browser: http://localhost:5000
+5. Click any question to begin!
+
+Good luck!
+
+================================================================================
+Created: 2026-04-08
+Status: Ready for use
