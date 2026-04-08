@@ -574,11 +574,22 @@ def upload_batch():
     if not isinstance(passing_score, (int, float)) or passing_score < 1 or passing_score > 100:
         passing_score = 70
 
+    # Preserve o11_only_questions — validate keys are string ints referencing known question ids
+    raw_o11 = data.get('o11_only_questions', {})
+    sanitized_o11 = {}
+    if isinstance(raw_o11, dict):
+        for k, v in raw_o11.items():
+            try:
+                sanitized_o11[str(int(k))] = sanitize_str(str(v))
+            except (ValueError, TypeError):
+                pass
+
     sanitized_data = {
         'name': name,
         'time_limit': int(time_limit),
         'passing_score': int(passing_score),
-        'questions': sanitized_questions
+        'questions': sanitized_questions,
+        'o11_only_questions': sanitized_o11,
     }
 
     filename = secure_filename(file.filename)
@@ -591,7 +602,8 @@ def upload_batch():
         'time_limit': sanitized_data['time_limit'],
         'passing_score': sanitized_data['passing_score'],
         'questions': sanitized_data['questions'],
-        'count': len(sanitized_data['questions'])
+        'count': len(sanitized_data['questions']),
+        'o11_only_questions': sanitized_o11,
     }
 
     return jsonify({'success': True, 'key': filename, 'name': sanitized_data['name'], 'count': len(sanitized_data['questions'])})
@@ -664,8 +676,8 @@ def submit_exam():
             'correct': question['correct'],
             'user_answer': user_answer,
             'is_correct': is_correct,
-            'is_o11': q_id_str in o11_map,
-            'o11_note': o11_map.get(q_id_str, ''),
+            'is_o11': q_id in o11_map,
+            'o11_note': o11_map.get(q_id, ''),
         })
 
     percentage = (score / len(questions)) * 100
