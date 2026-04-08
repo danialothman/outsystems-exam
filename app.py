@@ -98,6 +98,57 @@ def verify_questions_with_ai(questions):
         return True, ''
 
 
+def check_topic_diversity(topic, existing_batches):
+    """
+    Ask AI whether the requested topic is too similar to existing batches.
+    Returns (ok: bool, reason: str).
+    """
+    if not OPENROUTER_API_KEY or not existing_batches:
+        return True, ''
+
+    batch_list = '\n'.join(f'- {b["name"]}' for b in existing_batches)
+
+    prompt = (
+        "You are evaluating whether a new exam question batch would be too similar to existing ones.\n\n"
+        f"Requested topic: {topic}\n\n"
+        f"Existing batches:\n{batch_list}\n\n"
+        "Reply with ONLY a JSON object in this exact format:\n"
+        '{"ok": true, "reason": ""}\n'
+        "Set ok=false and provide a short reason if the new topic would produce questions that "
+        "significantly overlap with an existing batch (same certification, same core subject area). "
+        "Set ok=true if the new topic is sufficiently different or adds meaningful new coverage."
+    )
+
+    payload = json.dumps({
+        "model": "anthropic/claude-3-5-haiku",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.0,
+        "max_tokens": 150,
+    }).encode('utf-8')
+
+    req = urllib.request.Request(
+        'https://openrouter.ai/api/v1/chat/completions',
+        data=payload,
+        headers={
+            'Authorization': f'Bearer {OPENROUTER_API_KEY}',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'http://localhost:5000',
+        }
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        content = result['choices'][0]['message']['content'].strip()
+        fence_match = re.search(r'```(?:json)?\s*\n?([\s\S]*?)\n?```', content)
+        if fence_match:
+            content = fence_match.group(1)
+        verdict = json.loads(content)
+        return bool(verdict.get('ok', True)), str(verdict.get('reason', ''))
+    except Exception:
+        return True, ''
+
+
 BATCHES = load_all_batches()
 
 UPLOAD_RATE_PER_IP = 5      # max uploads per IP per hour
@@ -227,6 +278,12 @@ def generate_batch():
         allowed, rate_reason = _check_paid_gen_rate(ip)
         if not allowed:
             return jsonify({'error': rate_reason}), 429
+
+    # Diversity check — reject if topic overlaps too much with existing batches
+    existing = [{'name': b['name']} for b in BATCHES.values()]
+    diverse, diversity_reason = check_topic_diversity(topic, existing)
+    if not diverse:
+        return jsonify({'error': f'Topic too similar to an existing batch: {diversity_reason}'}), 409
 
     schema_example = json.dumps({
         "name": "Your Batch Name",
