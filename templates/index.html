@@ -356,8 +356,10 @@
         }
 
         .btn-submit:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         .btn-end {
@@ -710,7 +712,7 @@
                 <span class="timer-icon">⏱️</span>
                 <span id="timeText">120:00</span>
             </div>
-            <button class="btn btn-end" id="endExamBtn" onclick="endExam()">End Exam</button>
+            <button class="btn btn-end" id="endExamBtn" onclick="endExam()" title="You can end the exam at any time — your current answers will still be graded">End Exam</button>
         </div>
     </div>
 
@@ -897,7 +899,9 @@
                         ${currentQuestion === 0 ? 'disabled' : ''}>← Previous</button>
                     <button class="nav-btn" onclick="showQuestion(${currentQuestion + 1})"
                         ${currentQuestion === questions.length - 1 ? 'disabled' : ''}>Next →</button>
-                    <button class="btn btn-submit" onclick="showSubmitModal()">Submit Exam</button>
+                    <button class="btn btn-submit" id="submitBtn"
+                        onclick="showSubmitModal()"
+                        ${Object.keys(answers).length < questions.length ? 'disabled title="Answer all questions to enable submission"' : ''}>Submit Exam</button>
                 </div>
             `;
 
@@ -917,6 +921,15 @@
             });
             updateProgress();
             renderQuestionGrid();
+            updateSubmitBtn();
+        }
+
+        function updateSubmitBtn() {
+            const btn = document.getElementById('submitBtn');
+            if (!btn) return;
+            const allAnswered = Object.keys(answers).length >= questions.length;
+            btn.disabled = !allAnswered;
+            btn.title = allAnswered ? '' : 'Answer all questions to enable submission';
         }
 
         // Toggle flag
