@@ -514,6 +514,6 @@ def reset():
     return redirect('/')
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 5000))
     debug = not os.environ.get('REPL_ID')  # debug off on Replit
     app.run(host='0.0.0.0', port=port, debug=debug)
