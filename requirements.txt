@@ -1,7 +1,5 @@
 flask
 python-dotenv
 replit-object-storage
-flask
-python-dotenv
-replit-object-storage
 werkzeug
+gunicorn
