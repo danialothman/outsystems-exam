@@ -251,14 +251,28 @@ def get_session_questions():
     order = session.get('question_order', [])
     return [questions_by_id[qid] for qid in order if qid in questions_by_id]
 
+def _user_expiry(created_at_str):
+    """Return formatted expiry date string (created_at + 30 days)."""
+    from datetime import timedelta
+    try:
+        created = datetime.fromisoformat(created_at_str)
+        return (created + timedelta(days=30)).strftime('%B %d, %Y')
+    except Exception:
+        return None
+
+
 @app.route('/')
 def landing():
     """Landing page - show login/register or batch selection."""
     session['ui_access'] = True
     current_user = None
+    expiry_date = None
     if 'user_id' in session:
         current_user = user_db.get_user_by_id(session['user_id'])
-    return render_template('landing.html', current_user=current_user)
+        if current_user:
+            expiry_date = _user_expiry(current_user['created_at'])
+    return render_template('landing.html', current_user=current_user,
+                           expiry_date=expiry_date)
 
 
 @app.route('/login', methods=['POST'])
@@ -287,6 +301,28 @@ def register():
     session['user_id'] = user_id
     session['username'] = username
     return redirect('/')
+
+
+@app.route('/change-pin', methods=['POST'])
+@login_required
+def change_pin():
+    current_pin = request.form.get('current_pin', '').strip()
+    new_pin = request.form.get('new_pin', '').strip()
+    confirm_pin = request.form.get('confirm_pin', '').strip()
+    current_user = user_db.get_user_by_id(session['user_id'])
+    expiry_date = _user_expiry(current_user['created_at']) if current_user else None
+    if new_pin != confirm_pin:
+        return render_template('landing.html', current_user=current_user,
+                               expiry_date=expiry_date,
+                               change_pin_error='New PIN and confirmation do not match.',
+                               show_change_pin=True)
+    ok, error = user_db.change_pin(session['user_id'], current_pin, new_pin)
+    if not ok:
+        return render_template('landing.html', current_user=current_user,
+                               expiry_date=expiry_date,
+                               change_pin_error=error, show_change_pin=True)
+    return render_template('landing.html', current_user=current_user,
+                           expiry_date=expiry_date, change_pin_success=True)
 
 
 @app.route('/logout')

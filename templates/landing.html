@@ -536,6 +536,56 @@
             text-decoration: underline;
         }
 
+        .account-notice {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #92400e;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .account-notice svg {
+            flex-shrink: 0;
+        }
+
+        .change-pin-panel {
+            display: none;
+            background: #f9fafb;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .change-pin-panel.open {
+            display: block;
+        }
+
+        .change-pin-panel .panel-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .change-pin-success {
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            color: #065f46;
+            padding: 10px 14px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
         /* Auth form (shown when logged out) */
         .auth-section {
             text-align: left;
@@ -652,8 +702,45 @@
             <span class="user-bar-name">👤 {{ current_user.username }}</span>
             <span class="user-bar-links">
                 <a href="/history">My History</a>
+                <a href="#" onclick="toggleChangePinPanel(event)">Change PIN</a>
                 <a href="/logout">Logout</a>
             </span>
+        </div>
+
+        {% if expiry_date %}
+        <div class="account-notice">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            This account is active until <strong>{{ expiry_date }}</strong> — accounts are kept for 30 days from creation.
+        </div>
+        {% endif %}
+
+        {% if change_pin_success %}
+        <div class="change-pin-success">✓ PIN changed successfully.</div>
+        {% endif %}
+
+        <div class="change-pin-panel {% if show_change_pin %}open{% endif %}" id="changePinPanel">
+            <p class="panel-title">🔑 Change PIN</p>
+            {% if change_pin_error %}
+            <div class="auth-error">{{ change_pin_error }}</div>
+            {% endif %}
+            <form method="POST" action="/change-pin">
+                <div class="auth-field">
+                    <label>Current PIN</label>
+                    <input class="auth-input" type="password" name="current_pin"
+                           placeholder="Enter your current PIN" inputmode="numeric" required>
+                </div>
+                <div class="auth-field">
+                    <label>New PIN</label>
+                    <input class="auth-input" type="password" name="new_pin"
+                           placeholder="Choose a new PIN (4–8 digits)" inputmode="numeric" required>
+                </div>
+                <div class="auth-field">
+                    <label>Confirm New PIN</label>
+                    <input class="auth-input" type="password" name="confirm_pin"
+                           placeholder="Re-enter new PIN" inputmode="numeric" required>
+                </div>
+                <button type="submit" class="btn-auth">Update PIN</button>
+            </form>
         </div>
 
         <div class="batch-select-wrapper">
@@ -808,6 +895,9 @@
                     </div>
                     <button type="submit" class="btn-auth">Create Account</button>
                 </form>
+                <p class="auth-hint" style="margin-top:14px; text-align:center;">
+                    ⏳ Accounts are kept for 30 days from the date of creation.
+                </p>
                 <p class="auth-toggle">Already have an account? <a onclick="showPanel('login')">Sign in</a></p>
             </div>
         </div>
@@ -1175,6 +1265,22 @@
         });
 
         window.addEventListener('DOMContentLoaded', loadBatches);
+
+        function toggleChangePinPanel(e) {
+            e.preventDefault();
+            var panel = document.getElementById('changePinPanel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        {% if show_change_pin %}
+        document.addEventListener('DOMContentLoaded', function() {
+            var panel = document.getElementById('changePinPanel');
+            if (panel) panel.classList.add('open');
+        });
+        {% endif %}
 
         {% else %}
 

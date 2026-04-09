@@ -135,3 +135,22 @@ def get_user_by_id(user_id):
             'SELECT id, username, created_at FROM users WHERE id = ?', (user_id,)
         ).fetchone()
         return dict(row) if row else None
+
+
+def change_pin(user_id, current_pin, new_pin):
+    """Change a user's PIN. Returns (True, None) or (False, error_str)."""
+    if not new_pin or not new_pin.isdigit() or len(new_pin) < 4 or len(new_pin) > 8:
+        return False, 'New PIN must be 4–8 digits.'
+    with get_db() as conn:
+        row = conn.execute(
+            'SELECT pin_hash FROM users WHERE id = ?', (user_id,)
+        ).fetchone()
+    if not row:
+        return False, 'User not found.'
+    if not check_password_hash(row['pin_hash'], current_pin):
+        return False, 'Current PIN is incorrect.'
+    new_hash = generate_password_hash(new_pin)
+    with get_db() as conn:
+        conn.execute('UPDATE users SET pin_hash = ? WHERE id = ?', (new_hash, user_id))
+        conn.commit()
+    return True, None
