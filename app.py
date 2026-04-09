@@ -228,6 +228,20 @@ def _check_upload_rate(ip):
     return True, ''
 
 
+_LETTERS = ['A', 'B', 'C', 'D']
+
+
+def _shuffled_question(q, seed):
+    """Return (shuffled_options, new_correct_letter) using a reproducible seed."""
+    option_texts = [opt[3:] for opt in q['options']]  # strip "A) " prefix
+    correct_text = option_texts[_LETTERS.index(q['correct'])]
+    rng = random.Random(seed)
+    rng.shuffle(option_texts)
+    new_correct = _LETTERS[option_texts.index(correct_text)]
+    new_options = [f"{_LETTERS[i]}) {option_texts[i]}" for i in range(4)]
+    return new_options, new_correct
+
+
 def get_session_questions():
     """Get ordered question objects from session's selected batch."""
     batch_key = session.get('batch_key')
@@ -682,6 +696,7 @@ def index():
         session['time_limit'] = batch['time_limit']
         session['passing_score'] = batch['passing_score']
         session['o11_only_questions'] = {str(k): v for k, v in batch.get('o11_only_questions', {}).items()}
+        session['shuffle_seeds'] = {str(q['id']): random.randint(0, 2**31) for q in batch['questions']}
         attempt_id = user_db.create_attempt(
             session['user_id'], batch_key, batch['name']
         )
@@ -696,15 +711,18 @@ def index():
 def get_questions():
     """Get all questions without answers"""
     o11_map = session.get('o11_only_questions', {})
+    seeds = session.get('shuffle_seeds', {})
     questions_for_client = []
     for q in get_session_questions():
         q_id = str(q['id'])
+        seed = seeds.get(q_id)
+        options = _shuffled_question(q, seed)[0] if seed is not None else q['options']
         questions_for_client.append({
             'id': q['id'],
             'category': q['category'],
             'subcategory': q['subcategory'],
             'question': q['question'],
-            'options': q['options'],
+            'options': options,
             'is_o11': q_id in o11_map,
             'o11_note': o11_map.get(q_id, ''),
         })
@@ -718,13 +736,19 @@ def submit_exam():
 
     questions = get_session_questions()
     o11_map = session.get('o11_only_questions', {})
+    seeds = session.get('shuffle_seeds', {})
     score = 0
     results = []
 
     for question in questions:
         q_id = str(question['id'])
+        seed = seeds.get(q_id)
+        if seed is not None:
+            shuffled_opts, correct = _shuffled_question(question, seed)
+        else:
+            shuffled_opts, correct = question['options'], question['correct']
         user_answer = user_answers.get(q_id, '')
-        is_correct = user_answer == question['correct']
+        is_correct = user_answer == correct
 
         if is_correct:
             score += 1
@@ -734,8 +758,8 @@ def submit_exam():
             'category': question['category'],
             'subcategory': question['subcategory'],
             'question': question['question'],
-            'options': question['options'],
-            'correct': question['correct'],
+            'options': shuffled_opts,
+            'correct': correct,
             'user_answer': user_answer,
             'is_correct': is_correct,
             'is_o11': q_id in o11_map,
