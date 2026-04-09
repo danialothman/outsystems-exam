@@ -608,6 +608,130 @@
             background: #4f46e5;
         }
 
+        /* Question Review section */
+        .review-section {
+            margin-top: 48px;
+        }
+
+        .review-section h2 {
+            color: #1a202c;
+            margin-bottom: 24px;
+        }
+
+        .review-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .review-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        .review-q-num {
+            font-weight: 700;
+            color: #1a202c;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .review-badge-correct {
+            background: #d1fae5;
+            color: #065f46;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .review-badge-wrong {
+            background: #fee2e2;
+            color: #7f1d1d;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .review-badge-skipped {
+            background: #fef3c7;
+            color: #78350f;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .review-category {
+            font-size: 12px;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        .review-card-body {
+            padding: 16px;
+        }
+
+        .review-question-text {
+            font-size: 15px;
+            color: #1a202c;
+            margin-bottom: 14px;
+            line-height: 1.6;
+        }
+
+        .review-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .review-option {
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #374151;
+        }
+
+        .review-option.correct {
+            background: #d1fae5;
+            border-color: #6ee7b7;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .review-option.wrong {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #7f1d1d;
+        }
+
+        .review-explanation {
+            margin-top: 14px;
+            padding: 12px 14px;
+            background: #eff6ff;
+            border-left: 3px solid #4f46e5;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .review-explanation strong {
+            color: #1a202c;
+        }
+
         /* Loading state */
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -775,6 +899,11 @@
                     </p>
                     <button class="btn btn-copy" id="copyBtn">📋 Copy All Answers to Clipboard</button>
                     <p style="font-size: 12px; color: #999; margin-top: 8px;" id="copyStatus"></p>
+                </div>
+
+                <div class="review-section">
+                    <h2>Question Review</h2>
+                    <div id="questionReview"></div>
                 </div>
 
                 <div style="text-align: center; margin-top: 32px;">
@@ -1128,6 +1257,51 @@
                 }).join('');
 
             document.getElementById('categoryBreakdown').innerHTML = categoryHtml;
+
+            // Question review
+            const reviewHtml = examResults.results.map((result, index) => {
+                const skipped = !result.user_answer;
+                let badge;
+                if (skipped) {
+                    badge = `<span class="review-badge-skipped">⚠ Skipped</span>`;
+                } else if (result.is_correct) {
+                    badge = `<span class="review-badge-correct">✓ Correct</span>`;
+                } else {
+                    badge = `<span class="review-badge-wrong">✗ Incorrect</span>`;
+                }
+
+                const optionsHtml = result.options.map(opt => {
+                    const letter = opt.charAt(0);
+                    const isCorrect = letter === result.correct;
+                    const isUserWrong = letter === result.user_answer && !result.is_correct;
+                    let cls = 'review-option';
+                    let label = '';
+                    if (isCorrect) { cls += ' correct'; label = ' ✓'; }
+                    if (isUserWrong) { cls += ' wrong'; label = ' ✗ your answer'; }
+                    return `<div class="${cls}">${escapeHtml(opt)}${label}</div>`;
+                }).join('');
+
+                const explanationHtml = result.explanation
+                    ? `<div class="review-explanation"><strong>Explanation:</strong> ${escapeHtml(result.explanation)}</div>`
+                    : '';
+
+                return `
+                    <div class="review-card">
+                        <div class="review-card-header">
+                            <span class="review-q-num">Q${result.id}</span>
+                            ${badge}
+                            <span class="review-category">${escapeHtml(result.category)} › ${escapeHtml(result.subcategory)}</span>
+                        </div>
+                        <div class="review-card-body">
+                            <div class="review-question-text">${escapeHtml(result.question)}</div>
+                            <div class="review-options">${optionsHtml}</div>
+                            ${explanationHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('questionReview').innerHTML = reviewHtml;
         }
 
         // Copy to clipboard

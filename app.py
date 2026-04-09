@@ -678,6 +678,7 @@ def submit_exam():
             'is_correct': is_correct,
             'is_o11': q_id in o11_map,
             'o11_note': o11_map.get(q_id, ''),
+            'explanation': question.get('explanation', ''),
         })
 
     percentage = (score / len(questions)) * 100
