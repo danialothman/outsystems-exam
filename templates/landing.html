@@ -500,6 +500,144 @@
             font-size: 13px;
             color: #9ca3af;
         }
+
+        /* User bar (shown when logged in) */
+        .user-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: #f0f4ff;
+            border-radius: 8px;
+            margin-bottom: 28px;
+            font-size: 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .user-bar-name {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .user-bar-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .user-bar-links a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .user-bar-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Auth form (shown when logged out) */
+        .auth-section {
+            text-align: left;
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 24px;
+        }
+
+        .auth-field {
+            margin-bottom: 16px;
+        }
+
+        .auth-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #1a202c;
+            outline: none;
+            transition: border-color 0.2s;
+            background: white;
+        }
+
+        .auth-input:focus {
+            border-color: #4f46e5;
+        }
+
+        .auth-hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        .auth-error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .btn-auth {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 4px;
+        }
+
+        .btn-auth:hover {
+            opacity: 0.9;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .auth-toggle a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-form-panel {
+            display: none;
+        }
+
+        .auth-form-panel.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -507,6 +645,16 @@
         <img src="/static/logo.svg" alt="Logo" style="width: 64px; height: 64px; margin-bottom: 16px;">
         <h1 class="landing-title">OutSystems Exam Simulator</h1>
         <p class="landing-subtitle">Practice exams for any OutSystems certification</p>
+
+        {% if current_user %}
+
+        <div class="user-bar">
+            <span class="user-bar-name">👤 {{ current_user.username }}</span>
+            <span class="user-bar-links">
+                <a href="/history">My History</a>
+                <a href="/logout">Logout</a>
+            </span>
+        </div>
 
         <div class="batch-select-wrapper">
             <label for="batchSelect">Question Batch</label>
@@ -533,7 +681,7 @@
 
         <a href="#" class="btn-start disabled" id="startBtn">Start Exam</a>
 
-        <p class="landing-footer">The timer begins once you start the exam. Results are not stored — they are only shown at the end of each session.</p>
+        <p class="landing-footer">The timer begins once you start the exam. Your results are saved automatically to your account.</p>
 
         <div class="generate-divider">or</div>
 
@@ -611,9 +759,65 @@
             </div>
         </div>
 
+        {% else %}
+
+        <div class="auth-section">
+            <div id="loginPanel" class="auth-form-panel active">
+                <p class="auth-title">Sign in to your account</p>
+                {% if auth_error and auth_mode == 'login' %}
+                <div class="auth-error">{{ auth_error }}</div>
+                {% endif %}
+                <form method="POST" action="/login">
+                    <div class="auth-field">
+                        <label for="loginUsername">Username</label>
+                        <input class="auth-input" type="text" id="loginUsername" name="username"
+                               placeholder="Enter your username"
+                               value="{{ prefill_username or '' }}" autocomplete="username" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="loginPin">PIN</label>
+                        <input class="auth-input" type="password" id="loginPin" name="pin"
+                               placeholder="Enter your PIN" inputmode="numeric"
+                               autocomplete="current-password" required>
+                        <p class="auth-hint">Your numeric PIN (4–8 digits)</p>
+                    </div>
+                    <button type="submit" class="btn-auth">Sign In</button>
+                </form>
+                <p class="auth-toggle">No account? <a onclick="showPanel('register')">Create one</a></p>
+            </div>
+
+            <div id="registerPanel" class="auth-form-panel">
+                <p class="auth-title">Create an account</p>
+                {% if auth_error and auth_mode == 'register' %}
+                <div class="auth-error">{{ auth_error }}</div>
+                {% endif %}
+                <form method="POST" action="/register">
+                    <div class="auth-field">
+                        <label for="regUsername">Username</label>
+                        <input class="auth-input" type="text" id="regUsername" name="username"
+                               placeholder="Choose a username (3–20 chars)"
+                               value="{{ prefill_username or '' }}" autocomplete="username" required>
+                        <p class="auth-hint">Letters, numbers, and underscores only</p>
+                    </div>
+                    <div class="auth-field">
+                        <label for="regPin">PIN</label>
+                        <input class="auth-input" type="password" id="regPin" name="pin"
+                               placeholder="Choose a PIN (4–8 digits)" inputmode="numeric"
+                               autocomplete="new-password" required>
+                        <p class="auth-hint">Numeric only — used to sign in next time</p>
+                    </div>
+                    <button type="submit" class="btn-auth">Create Account</button>
+                </form>
+                <p class="auth-toggle">Already have an account? <a onclick="showPanel('login')">Sign in</a></p>
+            </div>
+        </div>
+
+        {% endif %}
+
     </div>
 
     <script>
+        {% if current_user %}
         let batches = [];
 
         function clearSelect(select) {
@@ -971,6 +1175,21 @@
         });
 
         window.addEventListener('DOMContentLoaded', loadBatches);
+
+        {% else %}
+
+        function showPanel(name) {
+            document.querySelectorAll('.auth-form-panel').forEach(function(p) {
+                p.classList.remove('active');
+            });
+            document.getElementById(name + 'Panel').classList.add('active');
+        }
+
+        {% if auth_mode == 'register' %}
+        document.addEventListener('DOMContentLoaded', function() { showPanel('register'); });
+        {% endif %}
+
+        {% endif %}
     </script>
 </body>
 </html>

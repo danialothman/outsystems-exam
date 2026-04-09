@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from storage import load_all_batches, save_batch
+from functools import wraps
 import urllib.request
 import urllib.error
 import random
@@ -11,6 +12,7 @@ import os
 import re
 import html as html_mod
 import logging
+import db as user_db
 
 load_dotenv()
 
@@ -18,6 +20,17 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s %(message)s')
 
 app = Flask(__name__)
 app.secret_key = 'outsystems-exam-simulator-2024'
+
+user_db.init_db()
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect('/')
+        return f(*args, **kwargs)
+    return decorated
 
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
@@ -226,9 +239,53 @@ def get_session_questions():
 
 @app.route('/')
 def landing():
-    """Landing page - prompt user to start exam"""
+    """Landing page - show login/register or batch selection."""
     session['ui_access'] = True
-    return render_template('landing.html')
+    current_user = None
+    if 'user_id' in session:
+        current_user = user_db.get_user_by_id(session['user_id'])
+    return render_template('landing.html', current_user=current_user)
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form.get('username', '').strip()
+    pin = request.form.get('pin', '').strip()
+    user_id, error = user_db.login_user(username, pin)
+    if error:
+        session['ui_access'] = True
+        return render_template('landing.html', current_user=None, auth_error=error,
+                               auth_mode='login', prefill_username=username)
+    session['user_id'] = user_id
+    session['username'] = username
+    return redirect('/')
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    username = request.form.get('username', '').strip()
+    pin = request.form.get('pin', '').strip()
+    user_id, error = user_db.register_user(username, pin)
+    if error:
+        session['ui_access'] = True
+        return render_template('landing.html', current_user=None, auth_error=error,
+                               auth_mode='register', prefill_username=username)
+    session['user_id'] = user_id
+    session['username'] = username
+    return redirect('/')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')
+
+
+@app.route('/history')
+@login_required
+def history():
+    attempts = user_db.get_user_attempts(session['user_id'])
+    return render_template('history.html', attempts=attempts, username=session.get('username', ''))
 
 @app.route('/api/batches')
 def list_batches():
@@ -609,6 +666,7 @@ def upload_batch():
     return jsonify({'success': True, 'key': filename, 'name': sanitized_data['name'], 'count': len(sanitized_data['questions'])})
 
 @app.route('/exam')
+@login_required
 def index():
     """Initialize exam session"""
     reload_batches()
@@ -624,9 +682,13 @@ def index():
         session['time_limit'] = batch['time_limit']
         session['passing_score'] = batch['passing_score']
         session['o11_only_questions'] = {str(k): v for k, v in batch.get('o11_only_questions', {}).items()}
-        return render_template('index.html')
+        attempt_id = user_db.create_attempt(
+            session['user_id'], batch_key, batch['name']
+        )
+        session['attempt_id'] = attempt_id
+        return render_template('index.html', username=session.get('username', ''))
     elif 'batch_key' in session and session['batch_key'] in BATCHES:
-        return render_template('index.html')
+        return render_template('index.html', username=session.get('username', ''))
     else:
         return redirect('/')
 
@@ -693,6 +755,11 @@ def submit_exam():
         if result['is_correct']:
             category_breakdown[cat]['correct'] += 1
 
+    attempt_id = session.get('attempt_id')
+    if attempt_id:
+        user_db.complete_attempt(attempt_id, score, len(questions),
+                                 round(percentage, 1), passed)
+
     return jsonify({
         'score': score,
         'total': len(questions),
@@ -751,10 +818,38 @@ def time_remaining():
 
     return jsonify({'remaining': remaining})
 
+@app.route('/api/abandon-attempt', methods=['POST'])
+def abandon_attempt_route():
+    """Mark current attempt as abandoned (called when user ends exam early)."""
+    attempt_id = session.get('attempt_id')
+    if attempt_id:
+        data = request.get_json() or {}
+        answered = data.get('answered', 0)
+        total = data.get('total', 0)
+        pct = (answered / total * 100) if total else None
+        user_db.abandon_attempt(attempt_id, score=answered, total=total,
+                                percentage=pct)
+    return jsonify({'success': True})
+
+
 @app.route('/reset')
 def reset():
-    """Reset exam session"""
+    """Reset exam session — keeps the user logged in."""
+    user_id = session.get('user_id')
+    username = session.get('username')
+    attempt_id = session.get('attempt_id')
+    if attempt_id:
+        answers = session.get('answers', {})
+        questions = get_session_questions()
+        total = len(questions)
+        answered = len(answers)
+        pct = (answered / total * 100) if total else None
+        user_db.abandon_attempt(attempt_id, score=answered, total=total, percentage=pct)
     session.clear()
+    if user_id:
+        session['user_id'] = user_id
+        session['username'] = username
+        session['ui_access'] = True
     return redirect('/')
 
 if __name__ == '__main__':

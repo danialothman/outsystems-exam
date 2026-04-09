@@ -848,6 +848,9 @@
             <div class="exam-title">OutSystems Exam Simulator</div>
         </div>
         <div style="display: flex; align-items: center; gap: 16px;">
+            {% if username %}
+            <span style="font-size: 13px; color: #a5b4fc; font-weight: 500;">👤 {{ username }}</span>
+            {% endif %}
             <div class="exam-timer" id="timerDisplay">
                 <span class="timer-icon">⏱️</span>
                 <span id="timeText">120:00</span>
