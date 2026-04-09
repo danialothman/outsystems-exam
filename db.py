@@ -130,7 +130,8 @@ def get_user_attempts(user_id):
     with get_db() as conn:
         rows = conn.execute(
             '''SELECT id, batch_key, batch_name, status, score, total, percentage,
-                      passed, started_at, finished_at
+                      passed, started_at, finished_at,
+                      CASE WHEN results_json IS NOT NULL THEN 1 ELSE 0 END AS has_detail
                FROM attempts WHERE user_id = ? ORDER BY started_at DESC''',
             (user_id,)
         ).fetchall()

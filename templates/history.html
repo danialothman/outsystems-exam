@@ -276,7 +276,7 @@
                         {% endif %}
                         <div class="attempt-score">{{ a.score }}/{{ a.total }}</div>
                         <div class="attempt-pct">{{ "%.1f"|format(a.percentage) }}%</div>
-                        {% if a.results_json %}
+                        {% if a.has_detail %}
                         <a href="/history/{{ a.id }}" class="btn-detail">View Details →</a>
                         {% endif %}
                     {% elif a.status == 'abandoned' %}
