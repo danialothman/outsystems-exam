@@ -1,50 +1,69 @@
+"""
+Database adapter — auto-selects backend:
+  - PostgreSQL  when DATABASE_URL is set  (Replit deployment)
+  - SQLite      otherwise                 (local development)
+"""
 import os
-import psycopg2
-import psycopg2.extras
-from psycopg2 import errors as pg_errors
-from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
+_USE_PG = bool(DATABASE_URL)
+
+DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
+
+# Query placeholder: %s for PostgreSQL, ? for SQLite
+PH = '%s' if _USE_PG else '?'
+
+if _USE_PG:
+    import psycopg2
 
 
-def get_db():
-    conn = psycopg2.connect(DATABASE_URL)
+# ---------------------------------------------------------------------------
+# Connection helpers
+# ---------------------------------------------------------------------------
+
+def _conn():
+    """Open a database connection for the active backend."""
+    if _USE_PG:
+        return psycopg2.connect(DATABASE_URL)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     return conn
 
 
-def init_db():
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute('''
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    username TEXT UNIQUE NOT NULL,
-                    pin_hash TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            cur.execute('''
-                CREATE TABLE IF NOT EXISTS attempts (
-                    id SERIAL PRIMARY KEY,
-                    user_id INTEGER NOT NULL REFERENCES users(id),
-                    batch_key TEXT NOT NULL,
-                    batch_name TEXT NOT NULL,
-                    status TEXT NOT NULL DEFAULT 'in_progress',
-                    score INTEGER,
-                    total INTEGER,
-                    percentage REAL,
-                    passed INTEGER,
-                    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    finished_at TIMESTAMP,
-                    results_json TEXT
-                )
-            ''')
-        conn.commit()
+def _rows(cur):
+    """Fetch all rows as a list of plain dicts."""
+    if _USE_PG:
+        cols = [d[0] for d in cur.description]
+        return [dict(zip(cols, r)) for r in cur.fetchall()]
+    return [dict(r) for r in cur.fetchall()]
+
+
+def _row(cur):
+    """Fetch one row as a plain dict, or None."""
+    if _USE_PG:
+        r = cur.fetchone()
+        if r is None:
+            return None
+        cols = [d[0] for d in cur.description]
+        return dict(zip(cols, r))
+    r = cur.fetchone()
+    return dict(r) if r else None
+
+
+def _insert_id(cur, sql, params):
+    """Run an INSERT and return the new row id."""
+    if _USE_PG:
+        cur.execute(sql + ' RETURNING id', params)
+        return cur.fetchone()[0]
+    cur.execute(sql, params)
+    return cur.lastrowid
 
 
 def _fmt_ts(val):
-    """Format a datetime or string timestamp to ISO string, or return None."""
+    """Normalise a timestamp to an ISO string (handles datetime objects and strings)."""
     if val is None:
         return None
     if hasattr(val, 'isoformat'):
@@ -53,12 +72,83 @@ def _fmt_ts(val):
 
 
 def _normalise(d):
-    """Convert any datetime values in a dict to ISO strings."""
+    """Convert datetime fields to ISO strings so templates can do string slicing."""
     for k in ('started_at', 'finished_at', 'created_at'):
         if k in d:
             d[k] = _fmt_ts(d[k])
     return d
 
+
+# ---------------------------------------------------------------------------
+# Schema
+# ---------------------------------------------------------------------------
+
+def init_db():
+    """Create tables if they don't already exist."""
+    with _conn() as conn:
+        cur = conn.cursor()
+        if _USE_PG:
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id          SERIAL PRIMARY KEY,
+                    username    TEXT UNIQUE NOT NULL,
+                    pin_hash    TEXT NOT NULL,
+                    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS attempts (
+                    id           SERIAL PRIMARY KEY,
+                    user_id      INTEGER NOT NULL REFERENCES users(id),
+                    batch_key    TEXT NOT NULL,
+                    batch_name   TEXT NOT NULL,
+                    status       TEXT NOT NULL DEFAULT 'in_progress',
+                    score        INTEGER,
+                    total        INTEGER,
+                    percentage   REAL,
+                    passed       INTEGER,
+                    started_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    finished_at  TIMESTAMP,
+                    results_json TEXT
+                )
+            ''')
+        else:
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username    TEXT UNIQUE NOT NULL COLLATE NOCASE,
+                    pin_hash    TEXT NOT NULL,
+                    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS attempts (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id      INTEGER NOT NULL,
+                    batch_key    TEXT NOT NULL,
+                    batch_name   TEXT NOT NULL,
+                    status       TEXT NOT NULL DEFAULT 'in_progress',
+                    score        INTEGER,
+                    total        INTEGER,
+                    percentage   REAL,
+                    passed       INTEGER,
+                    started_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    finished_at  TIMESTAMP,
+                    results_json TEXT,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )
+            ''')
+            # Migrate older SQLite DBs that predate results_json
+            try:
+                cur.execute('ALTER TABLE attempts ADD COLUMN results_json TEXT')
+            except Exception:
+                pass
+        conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# User management
+# ---------------------------------------------------------------------------
 
 def register_user(username, pin):
     """Register a new user. Returns (user_id, None) or (None, error_str)."""
@@ -71,17 +161,18 @@ def register_user(username, pin):
         return None, 'PIN must be 4–8 digits.'
     pin_hash = generate_password_hash(pin)
     try:
-        with get_db() as conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    'INSERT INTO users (username, pin_hash) VALUES (%s, %s) RETURNING id',
-                    (username, pin_hash)
-                )
-                user_id = cur.fetchone()[0]
+        with _conn() as conn:
+            cur = conn.cursor()
+            user_id = _insert_id(
+                cur,
+                f'INSERT INTO users (username, pin_hash) VALUES ({PH}, {PH})',
+                (username, pin_hash)
+            )
             conn.commit()
             return user_id, None
     except Exception as e:
-        if 'unique' in str(e).lower() or 'duplicate' in str(e).lower():
+        msg = str(e).lower()
+        if 'unique' in msg or 'duplicate' in msg:
             return None, 'Username already taken. Please choose another.'
         return None, 'Registration failed. Please try again.'
 
@@ -89,121 +180,127 @@ def register_user(username, pin):
 def login_user(username, pin):
     """Validate credentials. Returns (user_id, None) or (None, error_str)."""
     username = username.strip().lower()
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                'SELECT id, pin_hash FROM users WHERE username = %s', (username,)
-            )
-            row = cur.fetchone()
+    with _conn() as conn:
+        cur = conn.cursor()
+        cur.execute(f'SELECT id, pin_hash FROM users WHERE username = {PH}', (username,))
+        row = cur.fetchone()
     if not row:
         return None, 'Username not found.'
-    if not check_password_hash(row[1], pin):
+    pin_hash = row[1] if _USE_PG else row['pin_hash']
+    user_id  = row[0] if _USE_PG else row['id']
+    if not check_password_hash(pin_hash, pin):
         return None, 'Incorrect PIN.'
-    return row[0], None
-
-
-def create_attempt(user_id, batch_key, batch_name):
-    """Create a new in-progress attempt. Returns attempt_id."""
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                '''INSERT INTO attempts (user_id, batch_key, batch_name, status, started_at)
-                   VALUES (%s, %s, %s, 'in_progress', %s) RETURNING id''',
-                (user_id, batch_key, batch_name, datetime.now().isoformat())
-            )
-            attempt_id = cur.fetchone()[0]
-        conn.commit()
-        return attempt_id
-
-
-def complete_attempt(attempt_id, score, total, percentage, passed, results_json=None):
-    """Mark an attempt as completed with full results."""
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                '''UPDATE attempts
-                   SET status='completed', score=%s, total=%s, percentage=%s, passed=%s,
-                       finished_at=%s, results_json=%s
-                   WHERE id=%s''',
-                (score, total, round(percentage, 1), 1 if passed else 0,
-                 datetime.now().isoformat(), results_json, attempt_id)
-            )
-        conn.commit()
-
-
-def abandon_attempt(attempt_id, score=None, total=None, percentage=None):
-    """Mark an in-progress attempt as abandoned. Safe to call even if already completed."""
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                '''UPDATE attempts
-                   SET status='abandoned', score=%s, total=%s, percentage=%s, finished_at=%s
-                   WHERE id=%s AND status='in_progress' ''',
-                (score, total,
-                 round(percentage, 1) if percentage is not None else None,
-                 datetime.now().isoformat(), attempt_id)
-            )
-        conn.commit()
-
-
-def get_user_attempts(user_id):
-    """Return all attempts for a user, newest first."""
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                '''SELECT id, batch_key, batch_name, status, score, total, percentage,
-                          passed, started_at, finished_at,
-                          CASE WHEN results_json IS NOT NULL THEN 1 ELSE 0 END AS has_detail
-                   FROM attempts WHERE user_id = %s ORDER BY started_at DESC''',
-                (user_id,)
-            )
-            rows = cur.fetchall()
-            cols = [desc[0] for desc in cur.description]
-    return [_normalise(dict(zip(cols, r))) for r in rows]
-
-
-def get_attempt_detail(attempt_id, user_id):
-    """Return a single attempt (with results_json) belonging to user_id, or None."""
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                '''SELECT id, batch_key, batch_name, status, score, total, percentage,
-                          passed, started_at, finished_at, results_json
-                   FROM attempts WHERE id = %s AND user_id = %s''',
-                (attempt_id, user_id)
-            )
-            row = cur.fetchone()
-            cols = [desc[0] for desc in cur.description] if row else []
-    return _normalise(dict(zip(cols, row))) if row else None
+    return user_id, None
 
 
 def get_user_by_id(user_id):
     """Return user row by id."""
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute(
-                'SELECT id, username, created_at FROM users WHERE id = %s', (user_id,)
-            )
-            row = cur.fetchone()
-            cols = [desc[0] for desc in cur.description] if row else []
-    return _normalise(dict(zip(cols, row))) if row else None
+    with _conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f'SELECT id, username, created_at FROM users WHERE id = {PH}',
+            (user_id,)
+        )
+        d = _row(cur)
+    return _normalise(d) if d else None
 
 
 def change_pin(user_id, current_pin, new_pin):
     """Change a user's PIN. Returns (True, None) or (False, error_str)."""
     if not new_pin or not new_pin.isdigit() or len(new_pin) < 4 or len(new_pin) > 8:
         return False, 'New PIN must be 4–8 digits.'
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute('SELECT pin_hash FROM users WHERE id = %s', (user_id,))
-            row = cur.fetchone()
+    with _conn() as conn:
+        cur = conn.cursor()
+        cur.execute(f'SELECT pin_hash FROM users WHERE id = {PH}', (user_id,))
+        row = cur.fetchone()
     if not row:
         return False, 'User not found.'
-    if not check_password_hash(row[0], current_pin):
+    stored_hash = row[0] if _USE_PG else row['pin_hash']
+    if not check_password_hash(stored_hash, current_pin):
         return False, 'Current PIN is incorrect.'
-    new_hash = generate_password_hash(new_pin)
-    with get_db() as conn:
-        with conn.cursor() as cur:
-            cur.execute('UPDATE users SET pin_hash = %s WHERE id = %s', (new_hash, user_id))
+    with _conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f'UPDATE users SET pin_hash = {PH} WHERE id = {PH}',
+            (generate_password_hash(new_pin), user_id)
+        )
         conn.commit()
     return True, None
+
+
+# ---------------------------------------------------------------------------
+# Attempt tracking
+# ---------------------------------------------------------------------------
+
+def create_attempt(user_id, batch_key, batch_name):
+    """Create a new in-progress attempt. Returns attempt_id."""
+    with _conn() as conn:
+        cur = conn.cursor()
+        attempt_id = _insert_id(
+            cur,
+            f'''INSERT INTO attempts (user_id, batch_key, batch_name, status, started_at)
+                VALUES ({PH}, {PH}, {PH}, 'in_progress', {PH})''',
+            (user_id, batch_key, batch_name, datetime.now().isoformat())
+        )
+        conn.commit()
+    return attempt_id
+
+
+def complete_attempt(attempt_id, score, total, percentage, passed, results_json=None):
+    """Mark an attempt as completed with full results."""
+    with _conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f'''UPDATE attempts
+               SET status='completed', score={PH}, total={PH}, percentage={PH},
+                   passed={PH}, finished_at={PH}, results_json={PH}
+               WHERE id={PH}''',
+            (score, total, round(percentage, 1), 1 if passed else 0,
+             datetime.now().isoformat(), results_json, attempt_id)
+        )
+        conn.commit()
+
+
+def abandon_attempt(attempt_id, score=None, total=None, percentage=None):
+    """Mark an in-progress attempt as abandoned. Safe to call after completion."""
+    with _conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f'''UPDATE attempts
+               SET status='abandoned', score={PH}, total={PH}, percentage={PH},
+                   finished_at={PH}
+               WHERE id={PH} AND status='in_progress' ''',
+            (score, total,
+             round(percentage, 1) if percentage is not None else None,
+             datetime.now().isoformat(), attempt_id)
+        )
+        conn.commit()
+
+
+def get_user_attempts(user_id):
+    """Return all attempts for a user, newest first."""
+    with _conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f'''SELECT id, batch_key, batch_name, status, score, total, percentage,
+                       passed, started_at, finished_at,
+                       CASE WHEN results_json IS NOT NULL THEN 1 ELSE 0 END AS has_detail
+               FROM attempts WHERE user_id = {PH} ORDER BY started_at DESC''',
+            (user_id,)
+        )
+        rows = _rows(cur)
+    return [_normalise(r) for r in rows]
+
+
+def get_attempt_detail(attempt_id, user_id):
+    """Return a single attempt (with results_json) belonging to user_id, or None."""
+    with _conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f'''SELECT id, batch_key, batch_name, status, score, total, percentage,
+                       passed, started_at, finished_at, results_json
+               FROM attempts WHERE id = {PH} AND user_id = {PH}''',
+            (attempt_id, user_id)
+        )
+        d = _row(cur)
+    return _normalise(d) if d else None

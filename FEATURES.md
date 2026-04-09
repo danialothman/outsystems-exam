@@ -1,310 +1,92 @@
-# Feature Summary - OutSystems ODC Exam Simulator
+# Feature Summary — OutSystems Exam Simulator
 
-## Complete Feature List
+Current state of the application as of the PostgreSQL migration.
 
-### Core Exam Features
-- [x] 50 scenario-based multiple-choice questions
-- [x] 4 options per question (A-D format)
-- [x] Exact category weight distribution
-- [x] Server-side answer validation
-- [x] Session-based (no database required)
-- [x] Questions shuffled each session
-- [x] Single Flask app with embedded templates
+---
 
-### Timer & Time Management
-- [x] 120-minute countdown timer
-- [x] Always visible at top of screen
-- [x] MM:SS format display
-- [x] Auto-submit when time expires
-- [x] Color coding: normal (white) → warning (yellow) → critical (red)
-- [x] Pulsing animation at critical time
-- [x] Server-side time tracking
+## User Accounts
 
-### Professional UI Design
-- [x] Dark sidebar (#1a1a2e) with clean design
-- [x] Main content area with full-width questions
-- [x] Professional color scheme (indigo, cyan accents)
-- [x] Smooth transitions and animations
-- [x] Responsive design (desktop to tablet)
-- [x] Accessibility-friendly markup
+- [x] Register with username (3–20 chars, alphanumeric + underscore) and numeric PIN (4–8 digits)
+- [x] Usernames stored lowercase; case-insensitive login
+- [x] PINs hashed with Werkzeug pbkdf2:sha256 — never stored in plaintext
+- [x] Change PIN with current-PIN verification
+- [x] Account expiry notice: "expires in X days (date)" shown on landing page (30-day window from registration)
+- [x] `login_required` decorator protects exam, history, and detail routes
 
-### Question Navigation
-- [x] Visual question navigator grid (3x17 layout)
-- [x] Jump to any question by clicking number
-- [x] Previous/Next navigation buttons
-- [x] Active question highlighted
-- [x] Answered questions marked in green
-- [x] Visual indicators for all question states
+## Database — dual-backend
 
-### Question Display
-- [x] Full question text with context
-- [x] Category and subcategory badges
-- [x] Scenario-based content (not just definitions)
-- [x] Clear option formatting
-- [x] Radio button selection
+- [x] **SQLite** used automatically for local development (no setup needed; `users.db` auto-created)
+- [x] **PostgreSQL** used automatically on Replit when `DATABASE_URL` is present
+- [x] Same `db.py` module handles both — no code changes needed between environments
+- [x] Automatic schema creation (`init_db()`) on first run for both backends
+- [x] SQLite migration guard for older `.db` files missing the `results_json` column
 
-### Question Flagging
-- [x] Flag questions for review
-- [x] Visual flag indicator in sidebar
-- [x] Toggle flag on/off
-- [x] Flag persists throughout session
-- [x] Helps identify difficult questions
+## Exam Engine
 
-### Answer Management
-- [x] Save answers automatically
-- [x] Asynchronous save with fetch API
-- [x] Visual selection feedback
-- [x] Can change answer anytime
-- [x] Progress tracking
+- [x] Question batches loaded from `questions/` directory (JSON files)
+- [x] Additional batches persisted in Replit Object Storage (survive deploys)
+- [x] Attempt created in DB when exam starts (`status = in_progress`)
+- [x] Answer shuffling: option order randomised per question with a per-session seed, consistent across save and submit
+- [x] Answers saved per question via `/api/save-answer`
+- [x] Question flagging (flag / unflag) persisted in session
+- [x] 120-minute countdown timer with server-side tracking; auto-submit on expiry
+- [x] Timer colour: normal (white) → warning (yellow, <10 min) → critical (red pulsing, <5 min)
+- [x] Keyboard navigation: arrow keys move between questions
 
-### Results & Grading
-- [x] Final score display (X/50)
-- [x] Percentage calculation
-- [x] Pass/Fail status (70% = 35/50)
-- [x] Category breakdown with counts
-- [x] Percentage per category
-- [x] Visual pass (green) / fail (red) indicator
+## Attempt Lifecycle
 
-### Export & Sharing
-- [x] Copy all answers to clipboard
-- [x] Clean text format
-- [x] Question text included
-- [x] All options included
-- [x] User answers marked
-- [x] Exam date included
-- [x] Suitable for Claude grading
+- [x] `in_progress` — attempt started but not yet submitted
+- [x] `completed` — exam submitted; score, percentage, pass/fail, and full `results_json` stored
+- [x] `abandoned` — user navigated away via `/reset`; partial score recorded if available
+- [x] Attempt history list at `/history` — all attempts newest first
+- [x] "View Details →" link shown only when `results_json` is present
 
-### Security & Data
-- [x] Server-side answer storage
-- [x] Answers not visible client-side
-- [x] Correct answers not exposed
-- [x] Flask session security
-- [x] CSRF protection capable
+## Attempt Detail View
 
-### Question Quality
-- [x] Scenario-based questions (not definitions)
-- [x] Real-world context
-- [x] Exam-realistic difficulty
-- [x] Tricky but fair options
-- [x] Common misconceptions covered
-- [x] Explanations for study (server-stored)
+- [x] Score summary card with pass/fail badge
+- [x] Category breakdown with percentage bars
+- [x] Filter question cards: All / Correct / Incorrect
+- [x] Each card shows: question text, all options (with correct and user-selected highlighted), explanation
+- [x] Notice shown for old attempts without stored results
 
-## Category Distribution (50 total)
+## AI Features (optional)
 
-### UI Design (15 questions)
-- Input Widgets: 7 questions
-  - Form properties and validation
-  - Input widget binding
-  - Mandatory fields
-  - Built-in validations
-  - Form.Valid checking
-- Blocks & Events: 4 questions
-  - Block event handlers
-  - OnParametersChanged event
-  - Mandatory event handlers
-  - Block reusability
-- Display Data Widgets: 2 questions
-  - Expression widgets
-  - Data binding paths
-- Pagination & Sorting: 2 questions
-  - StartIndex and pagination
-  - OnSort event handler
+- [x] `/api/generate-batch` — generate a new question batch via OpenRouter (requires `OPENROUTER_API_KEY`)
+- [x] `/api/upload-batch` — upload a JSON batch; content verified by AI before acceptance
+- [x] O11 Only badge: questions with `"o11_only": true` shown with an amber label
+- [x] HTML entity decoding in `escapeHtml()` prevents double-encoding artifacts from AI-generated text
 
-### Fetching Data (10 questions)
-- Aggregates: 6 questions
-  - Multiple filters (AND logic)
-  - Join types (LEFT, INNER)
-  - Hidden columns
-  - Calculated attributes
-  - Aggregation functions
-  - Pattern matching (like operator)
-- Fetching Data on Screens: 4 questions
-  - Default fetch (At Start)
-  - On Demand fetch
-  - After Fetch event
-  - Multiple aggregates
+## Security
 
-### Logic (10 questions)
-- Logic Flows & Exception Handling: 5 questions
-  - Switch vs If statements
-  - Exception handler flow
-  - Exception propagation
-  - Specific vs generic exceptions
-  - Exception types
-- Form Validations: 3 questions
-  - Built-in validation types
-  - Validation timing
-  - Form.Valid checking
-- Client & Server Actions: 2 questions
-  - Execution context
-  - Call direction restrictions
-  - Function properties
+- [x] Admin endpoints (`/api/generate-batch`, `/api/upload-batch`) require `X-Admin-Key` header
+- [x] Rate limiting: upload 5/IP/hour, 20 global/hour; generation 1/IP/24h
+- [x] Correct answers never sent to the client
+- [x] Server-side grading only
 
-### Web Apps in ODC (6 questions)
-- Screen Lifecycle: 3 questions
-  - Event order
-  - OnInitialize vs OnReady
-  - DOM availability
-- App Troubleshooting: 2 questions
-  - Breakpoint locations
-  - Debug configuration
-- Client Variables: 1 question
-  - Session persistence
-  - Use cases
+## API Endpoints
 
-### Data Modeling (6 questions)
-- Entities & Static Entities: 3 questions
-  - Entity definition
-  - ID attribute (Primary Key)
-  - Static Entity use cases
-- Data Relationships: 2 questions
-  - 1-to-1 relationships
-  - 1-to-Many relationships
-  - Many-to-Many junctions
-- Bootstrap from Excel: 1 question
-  - Excel import mechanism
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/` | — | Landing / login / batch selector |
+| `POST` | `/login` | — | Authenticate |
+| `POST` | `/register` | — | Create account |
+| `GET` | `/logout` | — | Clear session |
+| `GET/POST` | `/change-pin` | User | Change PIN |
+| `GET` | `/exam` | User | Exam interface |
+| `GET` | `/reset` | User | Abandon attempt + return to landing |
+| `GET` | `/history` | User | Attempt history list |
+| `GET` | `/history/<id>` | User | Attempt detail view |
+| `GET` | `/api/questions` | User | Shuffled questions for session |
+| `POST` | `/api/save-answer` | User | Save one answer |
+| `POST` | `/api/toggle-flag` | User | Flag / unflag question |
+| `GET` | `/api/time-remaining` | User | Seconds remaining |
+| `POST` | `/api/submit` | User | Submit + grade |
+| `POST` | `/api/generate-batch` | Admin | AI batch generation |
+| `POST` | `/api/upload-batch` | Admin | JSON batch upload |
 
-### Role-based Security (3 questions)
-- Screen accessibility
-- Role checking
-- Dynamic visibility
+## Known Limitations
 
-## Technical Features
-
-### Backend (Flask)
-- [x] Single Python file (app.py)
-- [x] No database dependency
-- [x] Session management
-- [x] RESTful API endpoints
-- [x] JSON responses
-- [x] Time tracking
-- [x] Answer validation
-
-### Frontend (HTML/CSS/JavaScript)
-- [x] Responsive grid layout
-- [x] Flexbox design
-- [x] CSS animations
-- [x] Vanilla JavaScript (no frameworks)
-- [x] Client-side rendering
-- [x] Event handling
-- [x] Timer updates
-
-### API Endpoints
-- [x] GET / - Main exam page
-- [x] GET /api/questions - Get all questions
-- [x] GET /api/time-remaining - Get remaining time
-- [x] POST /api/save-answer - Save individual answer
-- [x] POST /api/toggle-flag - Flag/unflag question
-- [x] POST /api/submit - Submit exam and get results
-
-### Performance
-- [x] Fast question loading
-- [x] Smooth transitions
-- [x] No page reloads
-- [x] Responsive timer
-- [x] Efficient state management
-
-## User Experience Enhancements
-
-### Visual Feedback
-- [x] Color-coded category badges
-- [x] Selected option highlighting
-- [x] Hover effects on buttons
-- [x] Progress bar animation
-- [x] Timer color changes
-- [x] Smooth scrolling
-
-### Accessibility
-- [x] Semantic HTML
-- [x] Form labels
-- [x] Button labels
-- [x] Keyboard navigation
-- [x] Color contrast compliance
-
-### Mobile/Responsive
-- [x] Adapts to tablet screens
-- [x] Sidebar collapses on small screens
-- [x] Touch-friendly buttons
-- [x] Readable on smaller displays
-
-## Quality Assurance
-
-### Testing Coverage
-- [x] All 50 questions verified
-- [x] Category counts verified
-- [x] Answer keys verified
-- [x] API endpoints tested
-- [x] Timer functionality verified
-- [x] Session management verified
-
-### Known Limitations
-- Session-based (exam progress lost if closed)
-- No login system (single-user or honor system)
-- No database (all data in-memory)
-- Desktop-optimized (mobile support basic)
-- No question bank management UI
-
-## Deployment Options
-
-- [x] Standalone development
-- [x] Local network sharing
-- [x] Docker containerization
-- [x] Gunicorn WSGI server
-- [x] Nginx reverse proxy
-- [x] Systemd service
-- [x] Cloud deployment capable
-
-## File Structure
-
-```
-outsystems-exam/
-├── app.py (38KB)
-│   ├── Flask app initialization
-│   ├── 50 exam questions with answers
-│   ├── Session management
-│   ├── Grading logic
-│   └── API endpoints
-├── templates/
-│   └── index.html (26KB)
-│       ├── Complete UI markup
-│       ├── CSS styling
-│       ├── JavaScript functionality
-│       └── Timer and navigation
-├── requirements.txt (1 line - Flask)
-├── run.sh (executable script)
-├── README.md (comprehensive guide)
-├── DEPLOYMENT_GUIDE.md (deployment options)
-└── FEATURES.md (this file)
-```
-
-Total: ~100KB of code and assets
-
-## Success Criteria
-
-All requirements met:
-- [x] 50 questions ✓
-- [x] Correct category weights ✓
-- [x] 120-minute timer ✓
-- [x] Professional UI ✓
-- [x] Scenario-based questions ✓
-- [x] Visual scenario descriptions ✓
-- [x] Pass/fail at 70% ✓
-- [x] Category breakdown ✓
-- [x] Copy to clipboard ✓
-- [x] Question navigation ✓
-- [x] Flag for review ✓
-- [x] Session-based ✓
-- [x] Single Flask app ✓
-- [x] Embedded templates ✓
-- [x] No database ✓
-
-## Next Steps for Users
-
-1. Install: `pip install -r requirements.txt`
-2. Run: `python app.py`
-3. Visit: `http://localhost:5000`
-4. Take practice exam
-5. Review results
-6. Share with colleagues
-7. Customize as needed
-
+- Flask sessions are in-memory: exam progress is lost if the server restarts mid-exam
+- No multi-worker session sharing (single-process only unless Redis sessions are added)
+- No admin UI — batch management is via API calls with the admin key
+- Mobile layout is functional but not optimised for small screens
