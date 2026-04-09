@@ -3,3 +3,4 @@ python-dotenv
 replit-object-storage
 werkzeug
 gunicorn
+psycopg2-binary
