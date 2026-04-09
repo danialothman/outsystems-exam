@@ -952,9 +952,17 @@
         let timeRemaining = 7200; // 120 minutes
 
         function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
+            if (!str) return '';
+            // Decode any HTML entities already in the source (e.g. &#x27; → ')
+            const tmp = document.createElement('div');
+            tmp.innerHTML = str;
+            const plain = tmp.textContent || tmp.innerText || '';
+            // Re-encode only characters that are unsafe in HTML contexts
+            return plain
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
         }
 
         // Initialize exam
