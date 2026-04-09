@@ -103,6 +103,23 @@
             gap: 6px;
         }
 
+        .btn-detail {
+            display: inline-block;
+            padding: 5px 14px;
+            background: #ede9fe;
+            color: #4f46e5;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 4px;
+            transition: background 0.2s;
+        }
+
+        .btn-detail:hover {
+            background: #ddd6fe;
+        }
+
         .badge {
             display: inline-block;
             padding: 3px 12px;
@@ -259,6 +276,9 @@
                         {% endif %}
                         <div class="attempt-score">{{ a.score }}/{{ a.total }}</div>
                         <div class="attempt-pct">{{ "%.1f"|format(a.percentage) }}%</div>
+                        {% if a.results_json %}
+                        <a href="/history/{{ a.id }}" class="btn-detail">View Details →</a>
+                        {% endif %}
                     {% elif a.status == 'abandoned' %}
                         <span class="badge badge-abandoned">⚠ Abandoned</span>
                         {% if a.score is not none %}

@@ -35,10 +35,18 @@ def init_db():
                 passed INTEGER,
                 started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 finished_at TIMESTAMP,
+                results_json TEXT,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         ''')
         conn.commit()
+    # Migrate existing DB — add results_json if not present
+    with get_db() as conn:
+        try:
+            conn.execute('ALTER TABLE attempts ADD COLUMN results_json TEXT')
+            conn.commit()
+        except Exception:
+            pass
 
 
 def register_user(username, pin):
@@ -89,15 +97,16 @@ def create_attempt(user_id, batch_key, batch_name):
         return cur.lastrowid
 
 
-def complete_attempt(attempt_id, score, total, percentage, passed):
+def complete_attempt(attempt_id, score, total, percentage, passed, results_json=None):
     """Mark an attempt as completed with full results."""
     with get_db() as conn:
         conn.execute(
             '''UPDATE attempts
-               SET status='completed', score=?, total=?, percentage=?, passed=?, finished_at=?
+               SET status='completed', score=?, total=?, percentage=?, passed=?,
+                   finished_at=?, results_json=?
                WHERE id=?''',
             (score, total, round(percentage, 1), 1 if passed else 0,
-             datetime.now().isoformat(), attempt_id)
+             datetime.now().isoformat(), results_json, attempt_id)
         )
         conn.commit()
 
@@ -126,6 +135,18 @@ def get_user_attempts(user_id):
             (user_id,)
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+def get_attempt_detail(attempt_id, user_id):
+    """Return a single attempt (with results_json) belonging to user_id, or None."""
+    with get_db() as conn:
+        row = conn.execute(
+            '''SELECT id, batch_key, batch_name, status, score, total, percentage,
+                      passed, started_at, finished_at, results_json
+               FROM attempts WHERE id = ? AND user_id = ?''',
+            (attempt_id, user_id)
+        ).fetchone()
+        return dict(row) if row else None
 
 
 def get_user_by_id(user_id):

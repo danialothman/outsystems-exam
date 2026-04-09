@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attempt Detail — OutSystems Exam Simulator</title>
+    <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #333;
+        }
+
+        .page-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .page-header h1 {
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .page-header-sub {
+            color: #a5b4fc;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .header-links {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-back {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.22);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Summary row */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-stat {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .summary-stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .summary-stat-value.pass { color: #059669; }
+        .summary-stat-value.fail { color: #dc2626; }
+
+        .summary-stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .badge-pass { background: #d1fae5; color: #065f46; }
+        .badge-fail { background: #fee2e2; color: #7f1d1d; }
+
+        /* Category breakdown */
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+            margin-bottom: 14px;
+        }
+
+        .cat-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .cat-name {
+            min-width: 180px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .cat-bar-wrap {
+            flex: 1;
+            background: #e5e7eb;
+            border-radius: 99px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .cat-bar {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, #4f46e5, #06b6d4);
+        }
+
+        .cat-score {
+            min-width: 60px;
+            text-align: right;
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* No-results notice */
+        .no-results-notice {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        /* Review cards */
+        .review-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .review-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        .review-q-num {
+            font-weight: 700;
+            color: #1a202c;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .review-badge-correct {
+            background: #d1fae5;
+            color: #065f46;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .review-badge-wrong {
+            background: #fee2e2;
+            color: #7f1d1d;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .review-badge-skipped {
+            background: #fef3c7;
+            color: #78350f;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .review-category {
+            font-size: 12px;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        .o11-badge {
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 99px;
+            white-space: nowrap;
+        }
+
+        .review-card-body {
+            padding: 16px;
+        }
+
+        .review-question-text {
+            font-size: 15px;
+            color: #1a202c;
+            margin-bottom: 14px;
+            line-height: 1.6;
+        }
+
+        .review-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .review-option {
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .review-option.correct {
+            background: #d1fae5;
+            border-color: #6ee7b7;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .review-option.wrong {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #7f1d1d;
+        }
+
+        .review-explanation {
+            margin-top: 14px;
+            padding: 12px 14px;
+            background: #eff6ff;
+            border-left: 3px solid #4f46e5;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 16px;
+            border-radius: 99px;
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background: #ede9fe;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrap">
+
+        <div class="page-header">
+            <div>
+                <h1>{{ attempt.batch_name }}</h1>
+                <p class="page-header-sub">
+                    {{ username }} ·
+                    {{ attempt.started_at[:16].replace('T', ' ') }}
+                    {% if attempt.finished_at %} → {{ attempt.finished_at[:16].replace('T', ' ') }}{% endif %}
+                </p>
+            </div>
+            <div class="header-links">
+                <a href="/history" class="btn-back">← My History</a>
+            </div>
+        </div>
+
+        <!-- Score Summary -->
+        <div class="card">
+            <div class="summary-grid">
+                <div class="summary-stat">
+                    <div class="summary-stat-value">{{ attempt.score }}/{{ attempt.total }}</div>
+                    <div class="summary-stat-label">Score</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value {% if attempt.passed %}pass{% else %}fail{% endif %}">
+                        {{ "%.1f"|format(attempt.percentage) }}%
+                    </div>
+                    <div class="summary-stat-label">Percentage</div>
+                </div>
+                <div class="summary-stat">
+                    {% if attempt.passed %}
+                    <div class="summary-stat-value pass">✓</div>
+                    <div class="summary-stat-label">
+                        <span class="badge badge-pass">Passed</span>
+                    </div>
+                    {% else %}
+                    <div class="summary-stat-value fail">✗</div>
+                    <div class="summary-stat-label">
+                        <span class="badge badge-fail">Failed</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% set correct_count = results | selectattr('is_correct') | list | length %}
+                {% set skipped_count = results | selectattr('user_answer', 'equalto', '') | list | length %}
+                <div class="summary-stat">
+                    <div class="summary-stat-value" style="color:#059669;">{{ correct_count }}</div>
+                    <div class="summary-stat-label">Correct</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value" style="color:#dc2626;">{{ attempt.total - correct_count - skipped_count }}</div>
+                    <div class="summary-stat-label">Incorrect</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="summary-stat-value" style="color:#d97706;">{{ skipped_count }}</div>
+                    <div class="summary-stat-label">Skipped</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Breakdown -->
+        {% if category_breakdown %}
+        <div class="card">
+            <div class="section-title">Score by Category</div>
+            {% for cat, data in category_breakdown.items() %}
+            {% set pct = (data.correct / data.total * 100) | round | int %}
+            <div class="cat-row">
+                <div class="cat-name">{{ cat }}</div>
+                <div class="cat-bar-wrap">
+                    <div class="cat-bar" style="width: {{ pct }}%"></div>
+                </div>
+                <div class="cat-score">{{ data.correct }}/{{ data.total }} ({{ pct }}%)</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Question Review -->
+        {% if results %}
+        <div class="card">
+            <div class="section-title">Question Review</div>
+
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="filterCards('all', this)">All ({{ results | length }})</button>
+                <button class="filter-btn" onclick="filterCards('correct', this)">✓ Correct ({{ results | selectattr('is_correct') | list | length }})</button>
+                <button class="filter-btn" onclick="filterCards('wrong', this)">✗ Incorrect ({{ results | rejectattr('is_correct') | selectattr('user_answer') | list | length }})</button>
+                <button class="filter-btn" onclick="filterCards('skipped', this)">⚠ Skipped ({{ results | selectattr('user_answer', 'equalto', '') | list | length }})</button>
+            </div>
+
+            {% for r in results %}
+            {% set skipped = not r.user_answer %}
+            <div class="review-card"
+                 data-status="{% if skipped %}skipped{% elif r.is_correct %}correct{% else %}wrong{% endif %}">
+                <div class="review-card-header">
+                    <span class="review-q-num">Q{{ r.id }}</span>
+                    {% if skipped %}
+                    <span class="review-badge-skipped">⚠ Skipped</span>
+                    {% elif r.is_correct %}
+                    <span class="review-badge-correct">✓ Correct</span>
+                    {% else %}
+                    <span class="review-badge-wrong">✗ Incorrect</span>
+                    {% endif %}
+                    {% if r.is_o11 %}
+                    <span class="o11-badge" title="{{ r.o11_note or 'O11 specific' }}">O11 Only</span>
+                    {% endif %}
+                    <span class="review-category">{{ r.category }} › {{ r.subcategory }}</span>
+                </div>
+                <div class="review-card-body">
+                    <div class="review-question-text">{{ r.question }}</div>
+                    <div class="review-options">
+                        {% for opt in r.options %}
+                        {% set letter = opt[0] %}
+                        {% set is_correct_opt = letter == r.correct %}
+                        {% set is_user_wrong = letter == r.user_answer and not r.is_correct %}
+                        <div class="review-option{% if is_correct_opt %} correct{% elif is_user_wrong %} wrong{% endif %}">
+                            {{ opt }}{% if is_correct_opt %} ✓{% elif is_user_wrong %} ✗ your answer{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if r.explanation %}
+                    <div class="review-explanation"><strong>Explanation:</strong> {{ r.explanation }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="no-results-notice">
+                Detailed question review is only available for exams completed after this feature was introduced.
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <script>
+        function filterCards(status, btn) {
+            document.querySelectorAll('.filter-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            document.querySelectorAll('.review-card').forEach(function(card) {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

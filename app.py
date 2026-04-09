@@ -337,6 +337,28 @@ def history():
     attempts = user_db.get_user_attempts(session['user_id'])
     return render_template('history.html', attempts=attempts, username=session.get('username', ''))
 
+
+@app.route('/history/<int:attempt_id>')
+@login_required
+def attempt_detail(attempt_id):
+    attempt = user_db.get_attempt_detail(attempt_id, session['user_id'])
+    if not attempt:
+        return redirect('/history')
+    results = json.loads(attempt['results_json']) if attempt.get('results_json') else []
+    category_breakdown = {}
+    for r in results:
+        cat = r['category']
+        if cat not in category_breakdown:
+            category_breakdown[cat] = {'total': 0, 'correct': 0}
+        category_breakdown[cat]['total'] += 1
+        if r['is_correct']:
+            category_breakdown[cat]['correct'] += 1
+    return render_template('attempt_detail.html',
+                           attempt=attempt,
+                           results=results,
+                           category_breakdown=category_breakdown,
+                           username=session.get('username', ''))
+
 @app.route('/api/batches')
 def list_batches():
     """Return available question batches."""
@@ -818,7 +840,8 @@ def submit_exam():
     attempt_id = session.get('attempt_id')
     if attempt_id:
         user_db.complete_attempt(attempt_id, score, len(questions),
-                                 round(percentage, 1), passed)
+                                 round(percentage, 1), passed,
+                                 json.dumps(results))
 
     return jsonify({
         'score': score,
