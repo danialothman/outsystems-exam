@@ -251,31 +251,14 @@ def get_session_questions():
     order = session.get('question_order', [])
     return [questions_by_id[qid] for qid in order if qid in questions_by_id]
 
-def _user_expiry(created_at_str):
-    """Return (days_remaining, formatted_date) for the 30-day account window."""
-    from datetime import timedelta
-    try:
-        created = datetime.fromisoformat(created_at_str)
-        expiry = created + timedelta(days=30)
-        days_left = max(0, (expiry.date() - datetime.now().date()).days)
-        return days_left, expiry.strftime('%b %d, %Y')
-    except Exception:
-        return None, None
-
-
 @app.route('/')
 def landing():
     """Landing page - show login/register or batch selection."""
     session['ui_access'] = True
     current_user = None
-    expiry_days = None
-    expiry_date = None
     if 'user_id' in session:
         current_user = user_db.get_user_by_id(session['user_id'])
-        if current_user:
-            expiry_days, expiry_date = _user_expiry(current_user['created_at'])
-    return render_template('landing.html', current_user=current_user,
-                           expiry_days=expiry_days, expiry_date=expiry_date)
+    return render_template('landing.html', current_user=current_user)
 
 
 @app.route('/login', methods=['POST'])
@@ -313,19 +296,15 @@ def change_pin():
     new_pin = request.form.get('new_pin', '').strip()
     confirm_pin = request.form.get('confirm_pin', '').strip()
     current_user = user_db.get_user_by_id(session['user_id'])
-    expiry_days, expiry_date = _user_expiry(current_user['created_at']) if current_user else (None, None)
     if new_pin != confirm_pin:
         return render_template('landing.html', current_user=current_user,
-                               expiry_days=expiry_days, expiry_date=expiry_date,
                                change_pin_error='New PIN and confirmation do not match.',
                                show_change_pin=True)
     ok, error = user_db.change_pin(session['user_id'], current_pin, new_pin)
     if not ok:
         return render_template('landing.html', current_user=current_user,
-                               expiry_days=expiry_days, expiry_date=expiry_date,
                                change_pin_error=error, show_change_pin=True)
     return render_template('landing.html', current_user=current_user,
-                           expiry_days=expiry_days, expiry_date=expiry_date,
                            change_pin_success=True)
 
 

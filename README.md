@@ -4,8 +4,7 @@ A Flask web application for practising OutSystems certification exams. Supports 
 
 ## Features
 
-- **User accounts** — Register with a username and a 4–8 digit PIN; change PIN at any time
-- **Account expiry notice** — Accounts are flagged as expiring 30 days after creation
+- **User accounts** — Register with a username and a 4–8 digit PIN; change PIN at any time. Accounts and data are kept indefinitely.
 - **Practice exams** — Built-in question batch plus support for AI-generated or user-uploaded batches
 - **Answer shuffling** — Option order is randomised per question but stays consistent within a session
 - **Attempt history** — Every completed exam is saved; view score, pass/fail, and category breakdown

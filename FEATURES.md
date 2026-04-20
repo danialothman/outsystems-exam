@@ -10,7 +10,7 @@ Current state of the application as of the PostgreSQL migration.
 - [x] Usernames stored lowercase; case-insensitive login
 - [x] PINs hashed with Werkzeug pbkdf2:sha256 — never stored in plaintext
 - [x] Change PIN with current-PIN verification
-- [x] Account expiry notice: "expires in X days (date)" shown on landing page (30-day window from registration)
+- [x] Accounts and user data are retained indefinitely (no expiry, no automatic deletion)
 - [x] `login_required` decorator protects exam, history, and detail routes
 
 ## Database — dual-backend

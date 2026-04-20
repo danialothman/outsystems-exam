@@ -31,8 +31,7 @@ SQLite data lives inside the project directory. Replit rebuilds that directory f
 
 ## Key Features
 
-- **User accounts** — Username + numeric PIN (4–8 digits); no admin required
-- **Account expiry** — Accounts expire 30 days after registration; users can change their PIN
+- **User accounts** — Username + numeric PIN (4–8 digits); no admin required; users can change their PIN at any time. Accounts and their data are retained indefinitely.
 - **Attempt tracking** — Every exam attempt recorded as `in_progress`, `completed`, or `abandoned`
 - **Attempt detail view** — Full question-by-question review with correct answers and explanations
 - **Answer shuffling** — Options are shuffled per question using a per-session seed for consistency
