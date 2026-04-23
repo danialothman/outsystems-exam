@@ -290,6 +290,17 @@
             background: #4f46e5;
             color: white;
         }
+        .topic-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f3f4f6;
+            color: #9ca3af;
+            border-color: #e5e7eb;
+        }
+        .topic-card.disabled:hover {
+            border-color: #e5e7eb;
+            background: #f3f4f6;
+        }
 
         .custom-topic-input {
             display: none;
@@ -761,12 +772,12 @@
                 </div>
                 <div class="topic-cards" id="topicCards">
                     <div class="topic-card selected" data-topic="OutSystems ODC Associate Developer certification" data-topic-key="odc-associate">ODC Associate Developer</div>
-                    <div class="topic-card" data-topic="OutSystems Architecture Specialist certification" data-topic-key="architecture">Architecture Specialist</div>
-                    <div class="topic-card" data-topic="OutSystems Web Developer Specialist certification" data-topic-key="web-developer">Web Developer Specialist</div>
-                    <div class="topic-card" data-topic="OutSystems Security Specialist certification" data-topic-key="security">Security Specialist</div>
-                    <div class="topic-card" data-topic="OutSystems Mobile Developer Specialist certification" data-topic-key="mobile-developer">Mobile Developer Specialist</div>
-                    <div class="topic-card" data-topic="OutSystems Agentic AI certification" data-topic-key="agentic-ai">Agentic AI Certification</div>
-                    <div class="topic-card" data-topic="custom">Custom (manual prompt only)</div>
+                    <div class="topic-card disabled" title="Coming soon — different certifications have different exam parameters" data-topic="OutSystems Architecture Specialist certification" data-topic-key="architecture">Architecture Specialist</div>
+                    <div class="topic-card disabled" title="Coming soon — different certifications have different exam parameters" data-topic="OutSystems Web Developer Specialist certification" data-topic-key="web-developer">Web Developer Specialist</div>
+                    <div class="topic-card disabled" title="Coming soon — different certifications have different exam parameters" data-topic="OutSystems Security Specialist certification" data-topic-key="security">Security Specialist</div>
+                    <div class="topic-card disabled" title="Coming soon — different certifications have different exam parameters" data-topic="OutSystems Mobile Developer Specialist certification" data-topic-key="mobile-developer">Mobile Developer Specialist</div>
+                    <div class="topic-card disabled" title="Coming soon — different certifications have different exam parameters" data-topic="OutSystems Agentic AI certification" data-topic-key="agentic-ai">Agentic AI Certification</div>
+                    <div class="topic-card disabled" title="Coming soon — different certifications have different exam parameters" data-topic="custom">Custom (manual prompt only)</div>
                 </div>
                 <input type="text" class="custom-topic-input" id="customTopicInput" placeholder="Enter your exam topic...">
             </div>
@@ -1066,6 +1077,7 @@
         document.getElementById('topicCards').addEventListener('click', function(e) {
             var card = e.target.closest('.topic-card');
             if (!card) return;
+            if (card.classList.contains('disabled')) return;
 
             var cards = this.querySelectorAll('.topic-card');
             cards.forEach(function(c) { c.classList.remove('selected'); });
